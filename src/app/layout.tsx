@@ -7,12 +7,12 @@ import '@/styles/tailwind.css'
 
 export const metadata: Metadata = {
   title: {
-    template: '%s - Spencer Sharp',
+    template: '%s - TOSLAB',
     default:
-      'Spencer Sharp - Software designer, founder, and amateur astronaut',
+      'TOSLAB',
   },
   description:
-    'I’m Spencer, a software designer and entrepreneur based in New York City. I’m the founder and CEO of Planetaria, where we develop technologies that empower regular people to explore space on their own terms.',
+    '엔지니어이자 창업가이며, 틴지오브소울의 Project Owner로 활동하고 있습니다. 시장 트렌드와 기업 분석을 바탕으로 지속 가능한 기획과 전략을 주도하며, 고객과 사용자가 변화하는 시장 흐름을 빠르게 포착해 자신만의 혁신을 경험할 수 있도록 트렌드 중심의 프로젝트를 만들어가고 있습니다.',
   alternates: {
     types: {
       'application/rss+xml': `${process.env.NEXT_PUBLIC_SITE_URL}/feed.xml`,

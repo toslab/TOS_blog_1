@@ -34,3 +34,15 @@
   --text-9xl: 8rem;
   --text-9xl--line-height: 1;
 }
+
+
+/* 스크롤바 숨김 유틸리티 클래스 추가 */
+@layer utilities {
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .hide-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+}
