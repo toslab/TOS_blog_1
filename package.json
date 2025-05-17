@@ -29,7 +29,7 @@
     "clsx": "^2.1.1",
     "fast-glob": "^3.2.11",
     "feed": "^4.2.2",
-    "framer-motion": "^12.11.3",
+    "framer-motion": "^12.12.1",
     "next": "^14.0.4",
     "next-auth": "^4.24.11",
     "next-themes": "^0.2.1",

@@ -9,6 +9,10 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation'; // Next.js 13 App Router 기준
 // import { useRouter } from 'next/router'; // Next.js Pages Router 기준
 import { signIn } from 'next-auth/react'; // NextAuth.js의 signIn 함수를 가져옵니다.
+import { ThemeProvider } from 'next-themes';
+import logoGreen from '@/images/logos/logo_green.png';
+
+
 
 // 로그인 페이지 컴포넌트를 정의합니다.
 export default function LoginPage() {
@@ -98,20 +102,12 @@ export default function LoginPage() {
   };
 
   return (
-    <>
-      {/*
-        This example requires updating your template:
-
-        ```
-        <html class="h-full bg-gray-50">
-        <body class="h-full">
-        ```
-      */}
+    <ThemeProvider forcedTheme="light" attribute="class">
       <div className="flex min-h-full flex-1 flex-col justify-center py-12 sm:px-6 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
           <img
-            alt="Your Company"
-            src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=600"
+            alt="TOS Logo"
+            src={logoGreen.src}
             className="mx-auto h-10 w-auto"
           />
           <h2 className="mt-4 text-center text-2xl/9 font-bold tracking-tight text-gray-900">
@@ -197,23 +193,19 @@ export default function LoginPage() {
 
                 {!isSignUp && ( // 로그인 상태일 때만 "비밀번호 찾기" 표시
                   <div className="text-sm/6">
-                    <a href="#" className="font-semibold text-indigo-600 hover:text-indigo-500">
+                    <a href="#" className="font-semibold text-[#204d4c] hover:text-[#204d4c]">
                       Forgot password?
                     </a>
                   </div>
                 )}
               </div>
 
-              {error && (
-                <p className={`text-sm ${error === '회원가입이 완료되었습니다. 이제 로그인해주세요.' ? 'text-[#b4535b]' : 'text-red-600'}`}>
-                  {error}
-                </p>
-              )}
+              {error && <p className="text-sm text-red-600">{error}</p>}
 
               <div>
                 <button
                   type="submit"
-                  className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                  className="flex w-full justify-center rounded-md bg-[#204d4c] px-3 py-1.5 text-sm/6 font-semibold text-white shadow-xs hover:bg-[#5be4e1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
                 >
                   {isSignUp ? "가입하기" : "Sign in"}
                 </button>
@@ -284,13 +276,13 @@ export default function LoginPage() {
                 setIsSignUp(!isSignUp);
               }}
               type="button"
-              className="font-semibold text-indigo-600 hover:text-indigo-500"
+              className="font-semibold text-[#204d4c] hover:text-[#204d4c])"
             >
               {isSignUp ? "로그인하기" : "Sign up now"}
             </button>
           </p>
         </div>
       </div>
-    </>
+    </ThemeProvider>
   )
 }

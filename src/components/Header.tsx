@@ -16,7 +16,10 @@ import { LoginButton } from '@/components/loginandout/LoginButton'
 
 
 import { Container } from '@/components/Container'
-import avatarImage from '@/images/photos/TOS LAB.svg'
+// import avatarImage from '@/images/photos/TOS LAB.svg'; // 이 줄을 주석 처리하거나 삭제
+import logoLight from '@/images/photos/TOS LAB.svg'; // 일반 모드 로고
+import logoDark from '@/images/photos/TOS LAB_dark.svg'; // 다크 모드 로고
+
 
 function CloseIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
   return (
@@ -224,9 +227,11 @@ function AvatarContainer({
 function Avatar({
   large = false,
   className,
+  currentLogo, // 현재 테마에 맞는 로고 src를 props로 받음
   ...props
 }: Omit<React.ComponentPropsWithoutRef<typeof Link>, 'href'> & {
-  large?: boolean
+  large?: boolean;
+  currentLogo: any; // SVG import 타입에 맞게 설정 (예: string 또는 StaticImageData)
 }) {
   return (
     <Link
@@ -236,12 +241,12 @@ function Avatar({
       {...props}
     >
       <Image
-        src={avatarImage}
-        alt=""
+        src={currentLogo} // props로 받은 로고 사용
+        alt="TOS LAB Logo" // alt 텍스트 수정
         sizes={large ? '4rem' : '3.25rem'}
         className={clsx(
-          'object-contain transform scale-[2]',
-          large ? 'h-6 w-20' : 'h-5 w-12',
+          'object-contain transform scale-[2]', // 기존 스타일 유지
+          large ? 'h-6 w-20' : 'h-5 w-12',      // 기존 스타일 유지
         )}
         priority
       />
@@ -251,19 +256,25 @@ function Avatar({
 
 export function Header() {
   const pathname = usePathname()
-  const isLoginPage = pathname === '/login'
-
-  if (isLoginPage) {
-    return null
-  }
-
+  const { resolvedTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+  
+  // ✅ 모든 Hook을 여기로 이동
   let isHomePage = pathname === '/'
-
   let headerRef = useRef<React.ElementRef<'div'>>(null)
   let avatarRef = useRef<React.ElementRef<'div'>>(null)
   let isInitial = useRef(true)
-
+  
+  // 마운트 관련 useEffect
   useEffect(() => {
+    setMounted(true)
+  }, [])
+  
+  // 스크롤 관련 useEffect도 여기로 이동
+  useEffect(() => {
+    // early return으로 효과가 실행되지 않도록 할 수 있습니다
+    if (pathname === '/login') return;
+    
     let downDelay = avatarRef.current?.offsetTop ?? 0
     let upDelay = 64
 
@@ -361,8 +372,16 @@ export function Header() {
       window.removeEventListener('scroll', updateStyles)
       window.removeEventListener('resize', updateStyles)
     }
-  }, [isHomePage])
-
+  }, [isHomePage, pathname])
+  
+  const isLoginPage = pathname === '/login'
+  if (isLoginPage) {
+    return null
+  }
+  
+  // 마운트되지 않았거나 테마를 아직 확정할 수 없을 때 기본 로고
+  const logoForAvatar = mounted && resolvedTheme === 'dark' ? logoDark : logoLight;
+  
   return (
     <>
       <header
@@ -404,6 +423,7 @@ export function Header() {
                     large
                     className="block h-16 w-16 origin-left"
                     style={{ transform: 'var(--avatar-image-transform)' }}
+                    currentLogo={logoForAvatar} // 현재 테마에 맞는 로고 전달
                   />
                 </div>
               </div>
@@ -429,7 +449,7 @@ export function Header() {
               <div className="flex flex-1">
                 {!isHomePage && (
                   <AvatarContainer>
-                    <Avatar />
+                    <Avatar currentLogo={logoForAvatar} /> {/* 현재 테마에 맞는 로고 전달 */}
                   </AvatarContainer>
                 )}
               </div>

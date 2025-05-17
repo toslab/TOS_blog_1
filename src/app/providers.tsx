@@ -43,11 +43,18 @@ export const AppContext = createContext<{ previousPathname?: string }>({})
 export function Providers({ children }: { children: React.ReactNode }) {
   let pathname = usePathname()
   let previousPathname = usePrevious(pathname)
+  
+  // 로그인 페이지 감지
+  const isLoginPage = pathname === '/login'
 
   return (
     <AppContext.Provider value={{ previousPathname }}>
-      <ThemeProvider attribute="class" disableTransitionOnChange>
-        <ThemeWatcher />
+      <ThemeProvider 
+        attribute="class" 
+        disableTransitionOnChange
+        forcedTheme={isLoginPage ? "light" : undefined} // 로그인 페이지일 때만 라이트 테마 강제 적용
+      >
+        {!isLoginPage && <ThemeWatcher />} {/* 로그인 페이지에서는 ThemeWatcher 비활성화 */}
         {children}
       </ThemeProvider>
     </AppContext.Provider>
