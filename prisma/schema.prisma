@@ -1,0 +1,148 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL") // .env 파일의 DATABASE_URL을 사용합니다.
+}
+
+// 사용자 모델 (NextAuth.js 및 게시물 작성자 정보 포함)
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String? // 이메일/비밀번호 인증 시 사용
+
+  accounts Account[] // NextAuth.js - 소셜 로그인 계정
+  sessions Session[] // NextAuth.js - 세션
+
+  // 사용자가 작성한 콘텐츠
+  articles Article[]
+  studies  Study[]
+  history  HistoryEvent[] // 사용자가 생성한 History 이벤트 (필요에 따라)
+}
+
+// NextAuth.js - 소셜 로그인 계정 연결 모델
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+// NextAuth.js - 세션 모델
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// NextAuth.js - 이메일 인증 시 사용 (선택 사항)
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// 직접 작성하는 블로그 게시물
+model Article {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique // URL 친화적인 고유 식별자 (예: my-first-article)
+  content     String   @db.Text // 게시물 내용 (HTML, Markdown, JSON 등)
+  published   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  author      User     @relation(fields: [authorId], references: [id])
+  authorId    String
+  coverImage  String?  // 게시물 대표 이미지 URL (선택 사항)
+  excerpt     String?  // 간단한 요약 (선택 사항)
+  tags        Tag[]    // 게시물 태그 (다대다 관계)
+  series      Series?  @relation(fields: [seriesId], references: [id]) // 시리즈 (선택 사항)
+  seriesId    String?
+}
+
+// 공부 내용
+model Study {
+  id          String    @id @default(cuid())
+  title       String    // 공부 주제 또는 제목
+  slug        String    @unique // URL 친화적인 고유 식별자
+  content     String    @db.Text // 공부한 내용 정리
+  subject     String    // 큰 주제 (예: "JavaScript", "Database") - 목차 생성을 위해
+  category    String?   // 세부 카테고리 (예: "React Hooks", "PostgreSQL Optimization") (선택 사항)
+  published   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  author      User      @relation(fields: [authorId], references: [id])
+  authorId    String
+  tags        Tag[]     // 공부 내용 태그 (다대다 관계)
+  relatedDocs Study[]   @relation("StudyRelations") // 관련된 다른 Study (자기 참조, 선택 사항)
+  relatedTo   Study[]   @relation("StudyRelations") // 관련된 다른 Study (자기 참조, 선택 사항)
+  studyLog    StudyLog[] // 공부 진행 상황 로그 (선택 사항)
+}
+
+// 공부 진행 상황 로그 (선택 사항)
+model StudyLog {
+  id          String   @id @default(cuid())
+  studyId     String
+  study       Study    @relation(fields: [studyId], references: [id], onDelete: Cascade)
+  logDate     DateTime @default(now())
+  description String   // 어떤 내용을 얼마나 공부했는지 등
+  durationMin Int?     // 공부 시간 (분) (선택 사항)
+}
+
+// 업무 히스토리 (시간순 다이어그램용)
+model HistoryEvent {
+  id          String   @id @default(cuid())
+  title       String   // 이벤트 제목 (예: "프로젝트 시작", "1차 배포 완료")
+  description String?  @db.Text // 이벤트에 대한 상세 설명
+  eventDate   DateTime // 이벤트 발생 날짜 및 시간
+  eventType   String?  // 이벤트 유형 (예: "Milestone", "Task", "Issue") (선택 사항)
+  tags        Tag[]    // 이벤트 관련 태그 (선택 사항)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  author      User     @relation(fields: [authorId], references: [id]) // 이벤트를 기록한 사용자
+  authorId    String
+  relatedProject String? // 관련된 프로젝트명 (선택 사항)
+}
+
+// 태그 모델 (Article, Study, HistoryEvent 등 다양한 곳에서 사용)
+model Tag {
+  id        String   @id @default(cuid())
+  name      String   @unique // 태그 이름 (예: "React", "Node.js", "ProjectAlpha")
+  articles  Article[]
+  studies   Study[]
+  historyEvents HistoryEvent[]
+}
+
+// 시리즈 모델 (Article을 묶기 위함)
+model Series {
+  id          String    @id @default(cuid())
+  title       String    @unique
+  slug        String    @unique
+  description String?
+  articles    Article[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}

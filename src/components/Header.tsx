@@ -12,6 +12,8 @@ import {
   PopoverPanel,
 } from '@headlessui/react'
 import clsx from 'clsx'
+import { LoginButton } from '@/components/loginandout/LoginButton'
+
 
 import { Container } from '@/components/Container'
 import avatarImage from '@/images/photos/TOS LAB.svg'
@@ -248,7 +250,14 @@ function Avatar({
 }
 
 export function Header() {
-  let isHomePage = usePathname() === '/'
+  const pathname = usePathname()
+  const isLoginPage = pathname === '/login'
+
+  if (isLoginPage) {
+    return null
+  }
+
+  let isHomePage = pathname === '/'
 
   let headerRef = useRef<React.ElementRef<'div'>>(null)
   let avatarRef = useRef<React.ElementRef<'div'>>(null)
@@ -429,7 +438,8 @@ export function Header() {
                 <DesktopNavigation className="pointer-events-auto hidden md:block" />
               </div>
               <div className="flex justify-end md:flex-1">
-                <div className="pointer-events-auto">
+                <div className="pointer-events-auto flex items-center gap-4">
+                  <LoginButton />
                   <ThemeToggle />
                 </div>
               </div>
