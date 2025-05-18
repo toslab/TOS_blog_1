@@ -13,7 +13,8 @@ import {
 } from '@headlessui/react'
 import clsx from 'clsx'
 import { LoginButton } from '@/components/loginandout/LoginButton'
-
+import { ProfileButton } from '@/components/loginandout/ProfileButton'
+import { useSession } from 'next-auth/react'
 
 import { Container } from '@/components/Container'
 // import avatarImage from '@/images/photos/TOS LAB.svg'; // 이 줄을 주석 처리하거나 삭제
@@ -130,7 +131,7 @@ function MobileNavigation(
             <MobileNavItem href="/articles">Articles</MobileNavItem>
             <MobileNavItem href="/projects">Projects</MobileNavItem>
             <MobileNavItem href="/speaking">Speaking</MobileNavItem>
-            <MobileNavItem href="/uses">Uses</MobileNavItem>
+            <MobileNavItem href="/uses">History</MobileNavItem>
           </ul>
         </nav>
       </PopoverPanel>
@@ -175,7 +176,7 @@ function DesktopNavigation(props: React.ComponentPropsWithoutRef<'nav'>) {
         <NavItem href="/articles">Articles</NavItem>
         <NavItem href="/projects">Projects</NavItem>
         <NavItem href="/speaking">Speaking</NavItem>
-        <NavItem href="/uses">Uses</NavItem>
+        <NavItem href="/uses">History</NavItem>
       </ul>
     </nav>
   )
@@ -258,6 +259,7 @@ export function Header() {
   const pathname = usePathname()
   const { resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
+  const { data: session } = useSession()
   
   // ✅ 모든 Hook을 여기로 이동
   let isHomePage = pathname === '/'
@@ -459,7 +461,7 @@ export function Header() {
               </div>
               <div className="flex justify-end md:flex-1">
                 <div className="pointer-events-auto flex items-center gap-4">
-                  <LoginButton />
+                  {session?.user ? <ProfileButton /> : <LoginButton />}
                   <ThemeToggle />
                 </div>
               </div>

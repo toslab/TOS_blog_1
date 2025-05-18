@@ -3,6 +3,8 @@
 import { createContext, useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
 import { ThemeProvider, useTheme } from 'next-themes'
+import { SessionProvider } from 'next-auth/react'
+
 
 function usePrevious<T>(value: T) {
   let ref = useRef<T>()
@@ -48,15 +50,17 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const isLoginPage = pathname === '/login'
 
   return (
-    <AppContext.Provider value={{ previousPathname }}>
-      <ThemeProvider 
-        attribute="class" 
-        disableTransitionOnChange
-        forcedTheme={isLoginPage ? "light" : undefined} // 로그인 페이지일 때만 라이트 테마 강제 적용
-      >
-        {!isLoginPage && <ThemeWatcher />} {/* 로그인 페이지에서는 ThemeWatcher 비활성화 */}
-        {children}
-      </ThemeProvider>
-    </AppContext.Provider>
+    <SessionProvider>
+      <AppContext.Provider value={{ previousPathname }}>
+        <ThemeProvider 
+          attribute="class" 
+          disableTransitionOnChange
+          forcedTheme={isLoginPage ? "light" : undefined} // 로그인 페이지일 때만 라이트 테마 강제 적용
+        >
+          {!isLoginPage && <ThemeWatcher />} {/* 로그인 페이지에서는 ThemeWatcher 비활성화 */}
+          {children}
+        </ThemeProvider>
+      </AppContext.Provider>
+    </SessionProvider>    
   )
 }
