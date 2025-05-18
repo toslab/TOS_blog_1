@@ -1,0 +1,167 @@
+---
+description: 
+globs: src/app/dashboard/components/dashboard.tsx, src/app/dashboard/components/layout/**/*.tsx
+alwaysApply: false
+---
+---
+name: Dashboard Refactoring Guide - Detailed
+globs: ["src/app/dashboard/components/dashboard.tsx", "src/app/dashboard/components/layout/**/*.tsx"]
+alwaysApply: false
+description: "dashboard.tsx 및 관련 컴포넌트들의 복잡성을 줄이고 코드 품질을 향상시키기 위한 상세 리팩토링 규칙입니다."
+---
+
+# Cursor AI 리팩토링 규칙: 대시보드 복잡성 감소 (상세)
+
+## 1. 개요
+
+이 문서는 `dashboard.tsx`를 중심으로 한 애플리케이션 코드의 복잡성을 줄이고, 유지보수성 및 확장성을 향상시키기 위한 리팩토링 규칙을 정의합니다. AI 에이전트는 각 규칙에 따라 작업을 수행해야 합니다.
+
+## 2. 리팩토링 핵심 목표 (참고용)
+
+* **컴포넌트 분리:** 각 컴포넌트의 단일 책임 원칙 준수.
+* **상태 관리 개선:** 예측 가능한 상태 변화, 불필요한 리렌더링 감소, 명확한 데이터 흐름.
+* **로직 분리:** UI 렌더링, 상태 업데이트, 비즈니스 로직 분리.
+* **UI 일관성 확보:** 재사용 가능한 UI 컴포넌트 활용 및 일관된 디자인 시스템 적용.
+* **타입 안정성 강화:** TypeScript를 통한 컴파일 시점 오류 방지 및 코드 명확성 증대.
+
+## 3. 단계별 리팩토링 실행 규칙
+
+### 1단계: 대시보드 레이아웃 및 핵심 UI 구조 분리
+
+**규칙 1.1: `DashboardLayout.tsx` 컴포넌트 생성 및 이전 (상세 지침)**
+
+* **작업:** `src/app/dashboard/components/layout/DashboardLayout.tsx` 파일을 새로 생성합니다.
+* **지침:**
+    1.  **기존 레이아웃 구조 이전:**
+        * `src/app/dashboard/components/dashboard.tsx` 파일에서 다음 요소들을 `DashboardLayout.tsx`로 이전합니다:
+            * 최상위 `div` (flex h-screen 컨테이너).
+            * 모바일용 사이드바를 위한 `Sheet` 컴포넌트와 그 자식 요소들.
+            * 데스크탑용 정적 사이드바 (`motion.div`로 구현된 부분).
+            * 메인 콘텐츠 영역을 감싸는 `div` (flex-1 flex flex-col 구조).
+            * `DashboardHeader` (규칙 1.2에서 생성될) 컴포넌트가 위치할 자리와 `Sidebar` (규칙 1.3에서 생성될) 컴포넌트가 위치할 자리를 명시적으로 주석 처리하거나 placeholder로 둡니다.
+    2.  **상태 관리 이전 및 정의:**
+        * `sidebarOpen` (boolean, 모바일 사이드바 열림/닫힘), `setSidebarOpen` 상태 및 관련 로직을 `DashboardLayout.tsx` 내부 `useState`로 정의합니다.
+        * `collapsed` (boolean, 데스크탑 사이드바 접힘/펼침), `toggleSidebar` 함수 로직을 `DashboardLayout.tsx` 내부 `useState`로 정의합니다. (추후 `SidebarContext`로 이전 가능성을 염두에 둡니다 - 규칙 3.1.1).
+        * `sidebarWidth` 계산 로직 (`collapsed ? "5rem" : "18rem"`)을 `DashboardLayout.tsx` 내부에 유지하거나, `Sidebar.tsx`로 이전할 수 있습니다.
+    3.  **애니메이션 로직 이전:**
+        * `motion.div`를 사용한 데스크탑 사이드바 너비 애니메이션 (`animate={{ width: sidebarWidth }}`) 로직을 `DashboardLayout.tsx` 내의 해당 사이드바 마크업 부분에 유지합니다.
+    4.  **`children` Prop 처리:**
+        * `DashboardLayout.tsx`는 `children: React.ReactNode` 타입의 prop을 받아, 메인 콘텐츠 영역 (헤더 아래, 사이드바 오른쪽)에 해당 `children`을 렌더링해야 합니다.
+        * 메인 콘텐츠 영역의 `marginLeft` 스타일은 `sidebarWidth`와 `documentPanelOpen` (또는 유사한 패널 상태)을 고려하여 동적으로 계산되어야 합니다. 이 로직은 `DashboardLayout.tsx`에서 관리하거나, 메인 콘텐츠를 감싸는 별도 컴포넌트에서 처리할 수 있습니다. 초기에는 `DashboardLayout`에서 직접 스타일을 적용하는 방식을 고려합니다.
+    5.  **`DashboardLayout.tsx` 기본 구조 예시:**
+        ```tsx
+        // src/app/dashboard/components/layout/DashboardLayout.tsx
+        'use client';
+
+        import { useState, ReactNode } from 'react';
+        import { motion } from 'framer-motion';
+        import { Sheet, SheetContent } from '@/components/dashboard_UI/sheet'; // 경로 확인 필요
+        // import DashboardHeader from './DashboardHeader'; // 규칙 1.2에서 생성
+        // import Sidebar from './Sidebar'; // 규칙 1.3에서 생성
+
+        interface DashboardLayoutProps {
+          children: ReactNode;
+        }
+
+        export default function DashboardLayout({ children }: DashboardLayoutProps) {
+          const [sidebarOpen, setSidebarOpen] = useState(false);
+          const [collapsed, setCollapsed] = useState(false);
+          // const [projectPanelOpen, setProjectPanelOpen] = useState(false); // 예시: 패널 상태
+          // const [documentPanelOpen, setDocumentPanelOpen] = useState(false); // 예시: 패널 상태
+
+          const toggleSidebar = () => setCollapsed(!collapsed);
+          const sidebarWidth = collapsed ? "5rem" : "18rem";
+          // const projectPanelWidth = "18rem"; // 예시
+
+          // 메인 콘텐츠의 marginLeft 계산 로직 (예시, 실제 패널 상태에 따라 조정 필요)
+          // let mainContentMarginLeft = sidebarWidth;
+          // if (documentPanelOpen) {
+          //   mainContentMarginLeft = `calc(${sidebarWidth} + ${projectPanelWidth})`;
+          // } else if (projectPanelOpen) {
+          //    mainContentMarginLeft = `calc(${sidebarWidth} + ${projectPanelWidth})`;
+          // }
+
+
+          return (
+            <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
+              {/* Mobile Sidebar (Sheet) */}
+              <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+                <SheetContent side="left" className="p-0 w-[280px] bg-white dark:bg-gray-800">
+                  {/* TODO: Sidebar 내용을 여기에 채웁니다 (규칙 1.3에서 생성될 Sidebar 컴포넌트 또는 직접 구현) */}
+                  {/* <Sidebar onNavItemClick={() => setSidebarOpen(false)} isMobile /> */}
+                   <div className="p-4">모바일 사이드바 컨텐츠</div>
+                </SheetContent>
+              </Sheet>
+
+              {/* Desktop Sidebar */}
+              {/* TODO: 규칙 1.3에서 생성될 Sidebar 컴포넌트로 대체 */}
+              <motion.div
+                className="hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 lg:z-40 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+                animate={{ width: sidebarWidth }}
+                transition={{ duration: 0.3, ease: 'easeInOut' }}
+              >
+                {/* <Sidebar collapsed={collapsed} onToggleCollapse={toggleSidebar} activeNavItem={...} onNavItemClick={...} /> */}
+                <div className="p-4">데스크탑 사이드바 (collapsed: {String(collapsed)})</div>
+                <button onClick={toggleSidebar}>Toggle Collapse</button>
+              </motion.div>
+
+              {/* Main Content Area */}
+              <div
+                className="flex-1 flex flex-col overflow-hidden"
+                style={{
+                  // marginLeft: mainContentMarginLeft, // 실제 패널 상태에 따라 동적으로 설정
+                  marginLeft: `var(--sidebar-width, ${sidebarWidth})`, // CSS 변수 사용 고려
+                  transition: 'margin-left 0.3s ease-in-out',
+                }}
+              >
+                {/* TODO: 규칙 1.2에서 생성될 DashboardHeader 컴포넌트 */}
+                {/* <DashboardHeader onMobileMenuClick={() => setSidebarOpen(true)} /> */}
+                <div className="h-16 bg-white dark:bg-gray-800 border-b dark:border-gray-700 flex items-center px-4">헤더 영역</div>
+
+                <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+                  {children}
+                </main>
+              </div>
+            </div>
+          );
+        }
+        ```
+    6.  **`dashboard.tsx` 수정:**
+        * `DashboardLayout`을 import 하고, 기존 레이아웃 코드를 `DashboardLayout`으로 감싸도록 수정합니다.
+        * `DashboardLayout`으로 이전된 상태와 로직은 `dashboard.tsx`에서 제거합니다.
+* **참고 파일:** `src/app/dashboard/components/dashboard.tsx`
+
+---
+
+**(이하 규칙 1.2 ~ 5.4에 대해서도 위와 같이 각 "지침" 항목을 더 구체적인 단계, 코드 스니펫 예시, 주의사항 등으로 상세화합니다.)**
+
+**예를 들어, 규칙 4.1 (RichText 편집기 툴바 UI 미니멀리즘 적용)의 구체화된 지침은 다음과 같을 수 있습니다:**
+
+* **지침 (상세):**
+    1.  **아이콘으로 대체:** `src/app/dashboard/components/rich-text-editor.tsx` 파일의 툴바 `Button` 컴포넌트들에서 텍스트 레이블을 제거하고, `lucide-react`에서 제공하는 적절한 아이콘(예: `Bold`, `Italic`, `Heading1` 등)으로 대체합니다. 모든 아이콘의 크기는 `className="w-4 h-4"` (또는 `size={16}`)로 통일합니다.
+    2.  **버튼 스타일 수정:**
+        * `src/app/dashboard/styles/dashboard.css` 파일에서 `.editor-toolbar button` (또는 해당 Tailwind 클래스 그룹)의 스타일을 수정합니다.
+        * `padding`을 `p-1` 또는 `p-1.5` 정도로 줄입니다.
+        * 버튼의 `width`와 `height`를 `w-8 h-8` (또is는 `size-8`) 정도로 조정하여 더 컴팩트하게 만듭니다.
+        * 활성화된 버튼(Tiptap의 `editor.isActive(...)` 활용)에는 `bg-slate-200 dark:bg-slate-700`과 같은 배경색을 적용하여 시각적으로 구분합니다.
+    3.  **툴팁 추가:** 각 아이콘 버튼에 마우스 호버 시 기능 설명을 간략하게 보여주는 툴팁을 추가합니다.
+        * 간단하게는 `title` HTML 속성을 사용할 수 있습니다. (예: `<Button title="굵게">...`)
+        * 더 나은 사용자 경험을 위해 `src/components/dashboard_UI/popover.tsx` (또는 유사한 툴팁 컴포넌트)를 활용하는 것을 고려합니다.
+    4.  **드롭다운 메뉴로 그룹화:**
+        * 헤딩 버튼들(H1, H2, H3)을 `src/components/dashboard_UI/dropdown-menu.tsx`의 `DropdownMenu`를 사용하여 "헤딩 스타일" 드롭다운 메뉴로 통합합니다. 드롭다운 트리거는 `Heading` 아이콘을 사용합니다.
+        * 텍스트 정렬 버튼들(AlignLeft, AlignCenter, AlignRight, AlignJustify)도 "텍스트 정렬" 드롭다운 메뉴로 통합하는 것을 고려합니다.
+    5.  **참고 코드 (툴바 버튼 예시):**
+        ```tsx
+        // RichTextEditor.tsx 내 툴바 버튼 예시
+        <Button
+          variant={editor.isActive('bold') ? 'secondary' : 'ghost'}
+          size="sm" // dashboard_UI/button의 size prop 확인
+          onClick={() => editor.chain().focus().toggleBold().run()}
+          className="p-1.5 w-8 h-8" // 패딩과 크기 조정
+          title="굵게" // 간단한 툴팁
+        >
+          <Bold className="w-4 h-4" />
+        </Button>
+        ```
+
+
