@@ -102,9 +102,14 @@ export default function SlashCommands({ editor, isOpen, setIsOpen, command, onSe
   if (!isOpen) return null
 
   return (
-    <div className="w-64 bg-white rounded-md shadow-lg border border-gray-200 overflow-hidden">
-      <div className="p-1 border-b border-gray-200">
-        <h3 className="text-xs font-medium text-gray-700">기본 블록</h3>
+    <div
+      role="menu"
+      aria-label="슬래시 명령어 메뉴"
+      aria-orientation="vertical"
+      className="w-full"
+    >
+      <div className="p-2 border-b border-[hsl(var(--border))]">
+        <h3 className="text-xs font-medium text-[hsl(var(--foreground))]">기본 블록</h3>
       </div>
       <div className="max-h-60 overflow-y-auto py-1" ref={commandListRef}>
         {filteredCommands.length > 0 ? (
@@ -112,25 +117,27 @@ export default function SlashCommands({ editor, isOpen, setIsOpen, command, onSe
             <div
               key={item.title}
               ref={index === selectedIndex ? selectedItemRef : null}
-              className={`px-2 py-1 flex items-center gap-2 cursor-pointer ${
-                index === selectedIndex ? "bg-gray-100" : "hover:bg-gray-50"
+              role="menuitem"
+              tabIndex={index === selectedIndex ? 0 : -1}
+              className={`slash-command-item ${
+                index === selectedIndex ? "is-selected" : ""
               }`}
               onClick={(e) => {
                 e.stopPropagation()
                 selectItem(index)
               }}
             >
-              <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-md bg-gray-100 text-gray-500">
+              <div className="icon">
                 {item.icon}
               </div>
-              <div>
-                <div className="text-sm font-medium text-gray-900">{item.title}</div>
-                <div className="text-xs text-gray-500">{item.description}</div>
+              <div className="text">
+                <div className="title">{item.title}</div>
+                <div className="description">{item.description}</div>
               </div>
             </div>
           ))
         ) : (
-          <div className="px-3 py-2 text-sm text-gray-500">검색 결과가 없습니다.</div>
+          <div className="px-3 py-2 text-sm text-[hsl(var(--muted-foreground))]">검색 결과가 없습니다.</div>
         )}
       </div>
     </div>

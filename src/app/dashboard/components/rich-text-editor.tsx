@@ -96,7 +96,7 @@ interface SlashCommandMenuProps {
   position: { top: number; left: number };
 }
 
-// SlashCommandMenu 컴포넌트 분리 - 상태 관리를 분리하여 안정성 향상
+// SlashCommandMenu 컴포넌트 분리 및 최적화
 const SlashCommandMenu = memo(({ 
   editor, 
   command, 
@@ -105,11 +105,21 @@ const SlashCommandMenu = memo(({
   onSelect, 
   position 
 }: SlashCommandMenuProps) => {
-  if (!isOpen || !command || !editor) return null;
+  // 마운트 상태 추적
+  const [mounted, setMounted] = useState(false);
+  
+  // 클라이언트 사이드에서만 마운트 처리
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+  
+  // 컴포넌트가 마운트되지 않았거나 필요한 데이터가 없으면 렌더링하지 않음
+  if (!mounted || !isOpen || !command || !editor) return null;
   
   return (
     <div
-      className="absolute z-50 bg-white dark:bg-gray-800 rounded-lg shadow-lg border dark:border-gray-700 p-1 slash-command-menu"
+      className="absolute z-50 bg-[hsl(var(--popover))] text-[hsl(var(--popover-foreground))] border border-[hsl(var(--border))] rounded-md shadow-xl overflow-hidden w-64 slash-command-menu"
       style={{ top: position.top, left: position.left }}
     >
       <SlashCommands
@@ -138,11 +148,38 @@ export default function RichTextEditor() {
   const [markdownContent, setMarkdownContent] = useState("")
   const [colorPickerOpen, setColorPickerOpen] = useState(false)
   const [markdownView, setMarkdownView] = useState<"edit" | "preview">("edit")
+  // 시스템의 모션 축소 설정 감지
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
 
   const editorRef = useRef<HTMLDivElement>(null)
   const colorPickerRef = useRef<HTMLDivElement>(null)
+  const titleInputRef = useRef<HTMLInputElement>(null)
+  // 팝오버가 열리기 전에 포커스되어 있던 요소를 저장하기 위한 ref
+  const lastFocusedElementRef = useRef<HTMLElement | null>(null)
   // 애니메이션 프레임 참조 저장
   const animationFrameRef = useRef<number | null>(null)
+
+  // 시스템의 모션 축소 설정 감지
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setPrefersReducedMotion(mediaQuery.matches);
+
+    const handleMediaChange = () => {
+      setPrefersReducedMotion(mediaQuery.matches);
+    };
+
+    mediaQuery.addEventListener('change', handleMediaChange);
+    return () => {
+      mediaQuery.removeEventListener('change', handleMediaChange);
+    };
+  }, []);
+  
+  // 컴포넌트 마운트 시 타이틀 인풋에 포커스
+  useEffect(() => {
+    if (titleInputRef.current) {
+      titleInputRef.current.focus();
+    }
+  }, []);
 
   const editor = useEditor({
     extensions: [
@@ -469,336 +506,384 @@ export default function RichTextEditor() {
     input.click()
   }, [editor])
 
-  // 링크 삽입 함수
+  // 링크 삽입 함수 접근성 개선
   const handleLinkClick = useCallback(() => {
-    const url = window.prompt("URL 입력:")
+    // 마지막으로 포커스된 요소 저장
+    lastFocusedElementRef.current = document.activeElement as HTMLElement;
+    
+    // 접근성 개선: window.prompt 대신 모달 다이얼로그 구현 필요
+    // 현재는 기존 코드 유지
+    const url = window.prompt("URL 입력:");
     if (url && editor) {
-      editor.chain().focus().setLink({ href: url }).run()
+      editor.chain().focus().setLink({ href: url }).run();
+      
+      // 접근성: 링크가 추가된 후 에디터에 포커스 복원
+      if (editor) {
+        editor.commands.focus();
+      }
+    } else if (lastFocusedElementRef.current) {
+      // 사용자가 취소한 경우 이전에 포커스된 요소로 포커스 복원
+      lastFocusedElementRef.current.focus();
     }
-  }, [editor])
+  }, [editor]);
 
-  // YouTube 비디오 삽입 함수
+  // YouTube 비디오 삽입 함수 접근성 개선
   const handleYoutubeClick = useCallback(() => {
-    const url = window.prompt("YouTube URL 입력:")
+    // 마지막으로 포커스된 요소 저장
+    lastFocusedElementRef.current = document.activeElement as HTMLElement;
+    
+    // 접근성 개선: window.prompt 대신 모달 다이얼로그 구현 필요
+    // 현재는 기존 코드 유지
+    const url = window.prompt("YouTube URL 입력:");
     if (url && editor) {
-      editor.chain().focus().setYoutubeVideo({ src: url }).run()
+      editor.chain().focus().setYoutubeVideo({ src: url }).run();
+      
+      // 접근성: 비디오가 추가된 후 에디터에 포커스 복원
+      if (editor) {
+        editor.commands.focus();
+      }
+    } else if (lastFocusedElementRef.current) {
+      // 사용자가 취소한 경우 이전에 포커스된 요소로 포커스 복원
+      lastFocusedElementRef.current.focus();
     }
-  }, [editor])
+  }, [editor]);
 
   // 마크다운 뷰 토글
   const toggleMarkdownView = useCallback(() => {
     setMarkdownView((prev) => (prev === "edit" ? "preview" : "edit"))
   }, [])
 
-  // 에디터 렌더링 부분 추가
-  const renderEditor = () => {
-    // 마크다운 모드일 때 에디터 렌더링
-    if (isMarkdownMode) {
-      return (
-        <div>
-          {markdownView === "edit" ? (
-            <Textarea
-              value={markdownContent}
-              onChange={(e) => setMarkdownContent(e.target.value)}
-              className="w-full h-[calc(100vh-300px)] resize-none font-mono text-sm p-4 dark:bg-gray-800 dark:text-gray-100"
-            />
-          ) : (
-            <div
-              className="w-full h-[calc(100vh-300px)] overflow-y-auto border rounded p-4 prose dark:prose-invert max-w-none dark:bg-gray-800 dark:text-gray-100"
-              dangerouslySetInnerHTML={{ __html: marked.parse(markdownContent) }}
-            ></div>
-          )}
-        </div>
-      )
-    }
-
-    // 표준 모드일 때 에디터 렌더링
-    return (
-      <div ref={editorRef} className="relative">
-        <EditorContent editor={editor} className="prose dark:prose-invert max-w-none min-h-[calc(100vh-300px)]" />
-        <SlashCommandMenu
-          editor={editor}
-          command={slashCommand}
-          isOpen={slashCommandOpen}
-          setIsOpen={setSlashCommandOpen}
-          onSelect={handleSlashCommand}
-          position={slashCommandPosition}
-        />
-      </div>
-    )
-  }
-
-  // 툴바 렌더링 부분 수정
+  // 툴바 렌더링 부분 수정 - 접근성 강화
   const renderToolbar = () => {
     if (!editor) return null
 
     return (
-      <div className="flex flex-wrap items-center gap-0.5 border-b dark:border-gray-700 p-1 bg-white dark:bg-gray-800 overflow-x-auto">
-        {/* 서식 버튼들 - 아이콘 중심으로 변경하고 툴팁 추가 */}
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant={editor.isActive('bold') ? 'secondary' : 'ghost'}
-              size="icon"
-              onClick={() => editor.chain().focus().toggleBold().run()}
-              className="p-1.5 w-8 h-8" 
+      <div 
+        className="editor-toolbar flex flex-wrap items-center gap-0.5 border-b border-[hsl(var(--editor-toolbar-border))] p-2 bg-[hsl(var(--editor-toolbar-background))] overflow-x-auto"
+        role="toolbar"
+        aria-label="서식 도구 모음"
+      >
+        {/* 서식 버튼들 - 아이콘 중심으로 변경하고 툴크 추가 */}
+        <div className="editor-toolbar-group" role="group" aria-label="텍스트 서식">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={editor.isActive('bold') ? 'secondary' : 'ghost'}
+                size="icon"
+                onClick={() => editor.chain().focus().toggleBold().run()}
+                className="p-1.5 w-8 h-8 transition-colors duration-150 ease-out hover:scale-[1.05] active:scale-[0.98]" 
+                aria-label="굵게"
+                aria-pressed={editor.isActive('bold')}
+              >
+                <Bold className="w-4 h-4" />
+                <span className="sr-only">굵게</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent 
+              className="text-xs p-1.5 shadow-md rounded-md bg-[hsl(var(--popover))] text-[hsl(var(--popover-foreground))] w-auto"
+              sideOffset={5}
+              data-state="open:animate-in open:fade-in-0 open:zoom-in-95 closed:animate-out closed:fade-out-0 closed:zoom-out-95"
             >
-              <Bold className="w-4 h-4" />
-              <span className="sr-only">굵게</span>
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="text-xs p-1.5 shadow-md rounded-md bg-gray-900 text-white dark:bg-gray-50 dark:text-gray-900 w-auto">
-            굵게 (Ctrl+B)
-          </PopoverContent>
-        </Popover>
+              굵게 (Ctrl+B)
+            </PopoverContent>
+          </Popover>
 
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant={editor.isActive('italic') ? 'secondary' : 'ghost'}
-              size="icon"
-              onClick={() => editor.chain().focus().toggleItalic().run()}
-              className="p-1.5 w-8 h-8"
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={editor.isActive('italic') ? 'secondary' : 'ghost'}
+                size="icon"
+                onClick={() => editor.chain().focus().toggleItalic().run()}
+                className="p-1.5 w-8 h-8 transition-colors duration-150 ease-out hover:scale-[1.05] active:scale-[0.98]"
+                aria-label="이탤릭"
+                aria-pressed={editor.isActive('italic')}
+              >
+                <Italic className="w-4 h-4" />
+                <span className="sr-only">이탤릭</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent 
+              className="text-xs p-1.5 shadow-md rounded-md bg-[hsl(var(--popover))] text-[hsl(var(--popover-foreground))] w-auto"
+              sideOffset={5}
+              data-state="open:animate-in open:fade-in-0 open:zoom-in-95 closed:animate-out closed:fade-out-0 closed:zoom-out-95"
             >
-              <Italic className="w-4 h-4" />
-              <span className="sr-only">이탤릭</span>
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="text-xs p-1.5 shadow-md rounded-md bg-gray-900 text-white dark:bg-gray-50 dark:text-gray-900 w-auto">
-            이탤릭 (Ctrl+I)
-          </PopoverContent>
-        </Popover>
+              이탤릭 (Ctrl+I)
+            </PopoverContent>
+          </Popover>
 
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant={editor.isActive('underline') ? 'secondary' : 'ghost'}
-              size="icon"
-              onClick={() => editor.chain().focus().toggleUnderline().run()}
-              className="p-1.5 w-8 h-8"
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={editor.isActive('underline') ? 'secondary' : 'ghost'}
+                size="icon"
+                onClick={() => editor.chain().focus().toggleUnderline().run()}
+                className="p-1.5 w-8 h-8 transition-colors duration-150 ease-out hover:scale-[1.05] active:scale-[0.98]"
+                aria-label="밑줄"
+                aria-pressed={editor.isActive('underline')}
+              >
+                <UnderlineIcon className="w-4 h-4" />
+                <span className="sr-only">밑줄</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent 
+              className="text-xs p-1.5 shadow-md rounded-md bg-[hsl(var(--popover))] text-[hsl(var(--popover-foreground))] w-auto"
+              sideOffset={5}
+              data-state="open:animate-in open:fade-in-0 open:zoom-in-95 closed:animate-out closed:fade-out-0 closed:zoom-out-95"
             >
-              <UnderlineIcon className="w-4 h-4" />
-              <span className="sr-only">밑줄</span>
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="text-xs p-1.5 shadow-md rounded-md bg-gray-900 text-white dark:bg-gray-50 dark:text-gray-900 w-auto">
-            밑줄 (Ctrl+U)
-          </PopoverContent>
-        </Popover>
+              밑줄 (Ctrl+U)
+            </PopoverContent>
+          </Popover>
 
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant={editor.isActive('strike') ? 'secondary' : 'ghost'}
-              size="icon"
-              onClick={() => editor.chain().focus().toggleStrike().run()}
-              className="p-1.5 w-8 h-8"
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={editor.isActive('strike') ? 'secondary' : 'ghost'}
+                size="icon"
+                onClick={() => editor.chain().focus().toggleStrike().run()}
+                className="p-1.5 w-8 h-8 transition-colors duration-150 ease-out hover:scale-[1.05] active:scale-[0.98]"
+                aria-label="취소선"
+                aria-pressed={editor.isActive('strike')}
+              >
+                <Strikethrough className="w-4 h-4" />
+                <span className="sr-only">취소선</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent 
+              className="text-xs p-1.5 shadow-md rounded-md bg-[hsl(var(--popover))] text-[hsl(var(--popover-foreground))] w-auto"
+              sideOffset={5}
+              data-state="open:animate-in open:fade-in-0 open:zoom-in-95 closed:animate-out closed:fade-out-0 closed:zoom-out-95"
             >
-              <Strikethrough className="w-4 h-4" />
-              <span className="sr-only">취소선</span>
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="text-xs p-1.5 shadow-md rounded-md bg-gray-900 text-white dark:bg-gray-50 dark:text-gray-900 w-auto">
-            취소선
-          </PopoverContent>
-        </Popover>
-
-        {/* 구분선 */}
-        <div className="h-8 w-px bg-gray-200 dark:bg-gray-700 mx-1"></div>
+              취소선
+            </PopoverContent>
+          </Popover>
+        </div>
 
         {/* 헤딩 스타일 드롭다운 메뉴로 그룹화 */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="p-1.5 w-8 h-8" title="헤딩 스타일">
-              <Heading className="w-4 h-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}>
-              <Heading1 className="w-4 h-4 mr-2" /> 제목 1
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}>
-              <Heading2 className="w-4 h-4 mr-2" /> 제목 2
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}>
-              <Heading3 className="w-4 h-4 mr-2" /> 제목 3
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="editor-toolbar-group" role="group" aria-label="제목 및 정렬">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="p-1.5 w-8 h-8" aria-label="헤딩 스타일">
+                <Heading className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}>
+                <Heading1 className="w-4 h-4 mr-2" /> 제목 1
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}>
+                <Heading2 className="w-4 h-4 mr-2" /> 제목 2
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}>
+                <Heading3 className="w-4 h-4 mr-2" /> 제목 3
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
-        {/* 텍스트 정렬 드롭다운 메뉴로 그룹화 */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="p-1.5 w-8 h-8" title="텍스트 정렬">
-              <AlignLeft className="w-4 h-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => editor.chain().focus().setTextAlign('left').run()}>
-              <AlignLeft className="w-4 h-4 mr-2" /> 왼쪽 정렬
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => editor.chain().focus().setTextAlign('center').run()}>
-              <AlignCenter className="w-4 h-4 mr-2" /> 가운데 정렬
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => editor.chain().focus().setTextAlign('right').run()}>
-              <AlignRight className="w-4 h-4 mr-2" /> 오른쪽 정렬
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => editor.chain().focus().setTextAlign('justify').run()}>
-              <AlignJustify className="w-4 h-4 mr-2" /> 양쪽 정렬
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <div className="h-8 w-px bg-gray-200 dark:bg-gray-700 mx-1"></div>
+          {/* 텍스트 정렬 드롭다운 메뉴로 그룹화 */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="p-1.5 w-8 h-8" aria-label="텍스트 정렬">
+                <AlignLeft className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => editor.chain().focus().setTextAlign('left').run()}>
+                <AlignLeft className="w-4 h-4 mr-2" /> 왼쪽 정렬
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => editor.chain().focus().setTextAlign('center').run()}>
+                <AlignCenter className="w-4 h-4 mr-2" /> 가운데 정렬
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => editor.chain().focus().setTextAlign('right').run()}>
+                <AlignRight className="w-4 h-4 mr-2" /> 오른쪽 정렬
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => editor.chain().focus().setTextAlign('justify').run()}>
+                <AlignJustify className="w-4 h-4 mr-2" /> 양쪽 정렬
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
 
         {/* 목록 버튼 */}
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant={editor.isActive('bulletList') ? 'secondary' : 'ghost'}
-              size="icon"
-              onClick={() => editor.chain().focus().toggleBulletList().run()}
-              className="p-1.5 w-8 h-8"
+        <div className="editor-toolbar-group" role="group" aria-label="목록">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={editor.isActive('bulletList') ? 'secondary' : 'ghost'}
+                size="icon"
+                onClick={() => editor.chain().focus().toggleBulletList().run()}
+                className="p-1.5 w-8 h-8 transition-colors duration-150 ease-out hover:scale-[1.05] active:scale-[0.98]"
+                aria-label="글머리 기호 목록"
+                aria-pressed={editor.isActive('bulletList')}
+              >
+                <List className="w-4 h-4" />
+                <span className="sr-only">글머리 기호 목록</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent 
+              className="text-xs p-1.5 shadow-md rounded-md bg-[hsl(var(--popover))] text-[hsl(var(--popover-foreground))] w-auto"
+              sideOffset={5}
+              data-state="open:animate-in open:fade-in-0 open:zoom-in-95 closed:animate-out closed:fade-out-0 closed:zoom-out-95"
             >
-              <List className="w-4 h-4" />
-              <span className="sr-only">글머리 기호 목록</span>
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="text-xs p-1.5 shadow-md rounded-md bg-gray-900 text-white dark:bg-gray-50 dark:text-gray-900 w-auto">
-            글머리 기호 목록
-          </PopoverContent>
-        </Popover>
+              글머리 기호 목록
+            </PopoverContent>
+          </Popover>
 
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant={editor.isActive('orderedList') ? 'secondary' : 'ghost'}
-              size="icon"
-              onClick={() => editor.chain().focus().toggleOrderedList().run()}
-              className="p-1.5 w-8 h-8"
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={editor.isActive('orderedList') ? 'secondary' : 'ghost'}
+                size="icon"
+                onClick={() => editor.chain().focus().toggleOrderedList().run()}
+                className="p-1.5 w-8 h-8 transition-colors duration-150 ease-out hover:scale-[1.05] active:scale-[0.98]"
+                aria-label="번호 매기기 목록"
+                aria-pressed={editor.isActive('orderedList')}
+              >
+                <ListOrdered className="w-4 h-4" />
+                <span className="sr-only">번호 매기기 목록</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent 
+              className="text-xs p-1.5 shadow-md rounded-md bg-[hsl(var(--popover))] text-[hsl(var(--popover-foreground))] w-auto"
+              sideOffset={5}
+              data-state="open:animate-in open:fade-in-0 open:zoom-in-95 closed:animate-out closed:fade-out-0 closed:zoom-out-95"
             >
-              <ListOrdered className="w-4 h-4" />
-              <span className="sr-only">번호 매기기 목록</span>
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="text-xs p-1.5 shadow-md rounded-md bg-gray-900 text-white dark:bg-gray-50 dark:text-gray-900 w-auto">
-            번호 매기기 목록
-          </PopoverContent>
-        </Popover>
+              번호 매기기 목록
+            </PopoverContent>
+          </Popover>
+        </div>
 
-        <div className="h-8 w-px bg-gray-200 dark:bg-gray-700 mx-1"></div>
-
-        {/* 링크 버튼 */}
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant={editor.isActive('link') ? 'secondary' : 'ghost'}
-              size="icon"
-              onClick={handleLinkClick}
-              className="p-1.5 w-8 h-8"
+        {/* 링크 및 코드 버튼 */}
+        <div className="editor-toolbar-group">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={editor.isActive('link') ? 'secondary' : 'ghost'}
+                size="icon"
+                onClick={handleLinkClick}
+                className="p-1.5 w-8 h-8 transition-colors duration-150 ease-out hover:scale-[1.05] active:scale-[0.98]"
+              >
+                <LinkIcon className="w-4 h-4" />
+                <span className="sr-only">링크</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent 
+              className="text-xs p-1.5 shadow-md rounded-md bg-[hsl(var(--popover))] text-[hsl(var(--popover-foreground))] w-auto"
+              sideOffset={5}
+              data-state="open:animate-in open:fade-in-0 open:zoom-in-95 closed:animate-out closed:fade-out-0 closed:zoom-out-95"
             >
-              <LinkIcon className="w-4 h-4" />
-              <span className="sr-only">링크</span>
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="text-xs p-1.5 shadow-md rounded-md bg-gray-900 text-white dark:bg-gray-50 dark:text-gray-900 w-auto">
-            링크 추가
-          </PopoverContent>
-        </Popover>
+              링크 추가
+            </PopoverContent>
+          </Popover>
 
-        {/* 코드 버튼 */}
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant={editor.isActive('codeBlock') ? 'secondary' : 'ghost'}
-              size="icon"
-              onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-              className="p-1.5 w-8 h-8"
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={editor.isActive('codeBlock') ? 'secondary' : 'ghost'}
+                size="icon"
+                onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+                className="p-1.5 w-8 h-8 transition-colors duration-150 ease-out hover:scale-[1.05] active:scale-[0.98]"
+              >
+                <Code className="w-4 h-4" />
+                <span className="sr-only">코드 블록</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent 
+              className="text-xs p-1.5 shadow-md rounded-md bg-[hsl(var(--popover))] text-[hsl(var(--popover-foreground))] w-auto"
+              sideOffset={5}
+              data-state="open:animate-in open:fade-in-0 open:zoom-in-95 closed:animate-out closed:fade-out-0 closed:zoom-out-95"
             >
-              <Code className="w-4 h-4" />
-              <span className="sr-only">코드 블록</span>
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="text-xs p-1.5 shadow-md rounded-md bg-gray-900 text-white dark:bg-gray-50 dark:text-gray-900 w-auto">
-            코드 블록
-          </PopoverContent>
-        </Popover>
+              코드 블록
+            </PopoverContent>
+          </Popover>
+        </div>
 
-        <div className="h-8 w-px bg-gray-200 dark:bg-gray-700 mx-1"></div>
-
-        {/* 색상 선택 버튼 */}
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setColorPickerOpen(!colorPickerOpen)}
-              className="p-1.5 w-8 h-8"
+        {/* 기타 버튼 (색상, 이미지, 비디오) */}
+        <div className="editor-toolbar-group">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setColorPickerOpen(!colorPickerOpen)}
+                className="p-1.5 w-8 h-8 transition-colors duration-150 ease-out hover:scale-[1.05] active:scale-[0.98]"
+              >
+                <Palette className="w-4 h-4" />
+                <span className="sr-only">글자 색상</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent 
+              className="w-auto p-1.5 shadow-md rounded-md bg-[hsl(var(--popover))] text-[hsl(var(--popover-foreground))] border border-[hsl(var(--border))] cursor-pointer"
+              sideOffset={5}
+              data-state="open:animate-in open:fade-in-0 open:zoom-in-95 closed:animate-out closed:fade-out-0 closed:zoom-out-95"
             >
-              <Palette className="w-4 h-4" />
-              <span className="sr-only">글자 색상</span>
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-1.5 shadow-md rounded-md bg-white dark:bg-gray-800 border dark:border-gray-700">
-            <div className="grid grid-cols-10 gap-1 p-1">
-              {COLORS.map((color) => (
-                <button
-                  key={color}
-                  type="button"
-                  style={{ backgroundColor: color }}
-                  className="w-4 h-4 border dark:border-gray-600 rounded-sm"
-                  onClick={() => {
-                    editor.chain().focus().setColor(color).run();
-                    setColorPickerOpen(false);
-                  }}
-                />
-              ))}
-            </div>
-          </PopoverContent>
-        </Popover>
+              <div className="grid grid-cols-10 gap-1 p-1">
+                {COLORS.map((color) => (
+                  <button
+                    key={color}
+                    type="button"
+                    style={{ backgroundColor: color }}
+                    className="w-4 h-4 border border-[hsl(var(--border))] rounded-sm hover:ring-1 hover:ring-[hsl(var(--ring))]"
+                    onClick={() => {
+                      editor.chain().focus().setColor(color).run();
+                      setColorPickerOpen(false);
+                    }}
+                  />
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
 
-        {/* 이미지 버튼 */}
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={insertImage}
-              className="p-1.5 w-8 h-8"
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={insertImage}
+                className="p-1.5 w-8 h-8 transition-colors duration-150 ease-out hover:scale-[1.05] active:scale-[0.98]"
+              >
+                <ImageIcon className="w-4 h-4" />
+                <span className="sr-only">이미지 추가</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent 
+              className="text-xs p-1.5 shadow-md rounded-md bg-[hsl(var(--popover))] text-[hsl(var(--popover-foreground))] w-auto cursor-pointer"
+              sideOffset={5}
+              data-state="open:animate-in open:fade-in-0 open:zoom-in-95 closed:animate-out closed:fade-out-0 closed:zoom-out-95"
             >
-              <ImageIcon className="w-4 h-4" />
-              <span className="sr-only">이미지 추가</span>
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="text-xs p-1.5 shadow-md rounded-md bg-gray-900 text-white dark:bg-gray-50 dark:text-gray-900 w-auto">
-            이미지 추가
-          </PopoverContent>
-        </Popover>
+              이미지 추가
+            </PopoverContent>
+          </Popover>
 
-        {/* YouTube 비디오 버튼 */}
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleYoutubeClick}
-              className="p-1.5 w-8 h-8"
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleYoutubeClick}
+                className="p-1.5 w-8 h-8 transition-colors duration-150 ease-out hover:scale-[1.05] active:scale-[0.98]"
+              >
+                <Video className="w-4 h-4" />
+                <span className="sr-only">유튜브 동영상</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent 
+              className="text-xs p-1.5 shadow-md rounded-md bg-[hsl(var(--popover))] text-[hsl(var(--popover-foreground))] w-auto cursor-pointer"
+              sideOffset={5}
+              data-state="open:animate-in open:fade-in-0 open:zoom-in-95 closed:animate-out closed:fade-out-0 closed:zoom-out-95"
             >
-              <Video className="w-4 h-4" />
-              <span className="sr-only">유튜브 동영상</span>
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="text-xs p-1.5 shadow-md rounded-md bg-gray-900 text-white dark:bg-gray-50 dark:text-gray-900 w-auto">
-            유튜브 동영상 추가
-          </PopoverContent>
-        </Popover>
+              유튜브 동영상 추가
+            </PopoverContent>
+          </Popover>
+        </div>
 
         <div className="ml-auto flex">
           {/* 마크다운 모드 전환 버튼 */}
           <Button
             variant="ghost"
             onClick={toggleMarkdownMode}
-            className="text-xs p-1.5 h-8"
+            className="text-xs p-1.5 h-8 transition-colors duration-150 ease-out hover:scale-[1.05] active:scale-[0.98]"
+            aria-label={isMarkdownMode ? "에디터 모드로 전환" : "마크다운 모드로 전환"}
+            aria-pressed={isMarkdownMode}
           >
             {isMarkdownMode ? "에디터 모드" : "마크다운 모드"}
           </Button>
@@ -809,24 +894,36 @@ export default function RichTextEditor() {
               variant="ghost"
               size="icon"
               onClick={() => setMarkdownView(markdownView === "edit" ? "preview" : "edit")}
-              className="p-1.5 w-8 h-8 ml-1"
-              title={markdownView === "edit" ? "미리보기" : "편집"}
+              className="p-1.5 w-8 h-8 ml-1 transition-colors duration-150 ease-out hover:scale-[1.05] active:scale-[0.98]"
+              aria-label={markdownView === "edit" ? "미리보기" : "편집"}
+              aria-pressed={markdownView === "preview"}
             >
               {markdownView === "edit" ? <Eye className="w-4 h-4" /> : <Edit className="w-4 h-4" />}
             </Button>
           )}
 
-          <div className="h-8 w-px bg-gray-200 dark:bg-gray-700 mx-1"></div>
+          <div className="h-8 w-px bg-[hsl(var(--border))] mx-1" aria-hidden="true"></div>
 
           {/* 저장 및 게시 버튼 */}
           <Button
             variant="ghost"
             size="icon"
             onClick={handleSave}
-            className="p-1.5 w-8 h-8"
+            className="p-1.5 w-8 h-8 transition-colors duration-150 ease-out hover:scale-[1.05] active:scale-[0.98]"
             disabled={saveStatus === "saving"}
+            aria-label="저장"
+            aria-busy={saveStatus === "saving"}
           >
-            <Save className="w-4 h-4" />
+            {saveStatus === "saving" ? (
+              <div className="animate-spin">
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              </div>
+            ) : (
+              <Save className="w-4 h-4" />
+            )}
             <span className="sr-only">저장</span>
           </Button>
 
@@ -834,12 +931,86 @@ export default function RichTextEditor() {
             variant="ghost"
             size="icon"
             onClick={handlePublish}
-            className="p-1.5 w-8 h-8 ml-1"
+            className="p-1.5 w-8 h-8 ml-1 transition-colors duration-150 ease-out hover:scale-[1.05] active:scale-[0.98]"
             disabled={publishStatus === "publishing"}
+            aria-label="게시"
+            aria-busy={publishStatus === "publishing"}
           >
-            <Send className="w-4 h-4" />
+            {publishStatus === "publishing" ? (
+              <div className="animate-spin">
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              </div>
+            ) : (
+              <Send className="w-4 h-4" />
+            )}
             <span className="sr-only">게시</span>
           </Button>
+        </div>
+      </div>
+    )
+  }
+
+  // 에디터 렌더링 부분 추가
+  const renderEditor = () => {
+    // 마크다운 모드일 때 에디터 렌더링
+    if (isMarkdownMode) {
+      return (
+        <div 
+          className="editor-container rounded-lg overflow-hidden border border-[hsl(var(--editor-toolbar-border))] shadow-md dark:shadow-black/20"
+          style={{ 
+            transition: prefersReducedMotion ? 'none' : 'all 0.2s ease',
+            animation: prefersReducedMotion ? 'none' : 'fadeIn 0.3s ease-out'
+          } as React.CSSProperties}
+        >
+          {markdownView === "edit" ? (
+            <Textarea
+              value={markdownContent}
+              onChange={(e) => setMarkdownContent(e.target.value)}
+              className="w-full min-h-[300px] resize-none border-none font-mono text-sm p-4 bg-[hsl(var(--editor-markdown-bg))] text-[hsl(var(--editor-text-color))] focus-visible:ring-0 focus-visible:outline-none cursor-text"
+              aria-label="마크다운 편집기"
+            />
+          ) : (
+            <div
+              className="w-full min-h-[300px] overflow-y-auto p-4 prose dark:prose-invert max-w-none bg-[hsl(var(--editor-content-background))] text-[hsl(var(--editor-text-color))] cursor-default"
+              dangerouslySetInnerHTML={{ __html: marked.parse(markdownContent) }}
+              aria-label="마크다운 미리보기"
+              tabIndex={0}
+            ></div>
+          )}
+        </div>
+      )
+    }
+
+    // 표준 모드일 때 에디터 렌더링
+    return (
+      <div 
+        className="editor-container rounded-lg overflow-hidden border border-[hsl(var(--editor-toolbar-border))] shadow-md dark:shadow-black/20"
+        style={{ 
+          transition: prefersReducedMotion ? 'none' : 'all 0.2s ease',
+          animation: prefersReducedMotion ? 'none' : 'fadeIn 0.3s ease-out'
+        } as React.CSSProperties}
+      >
+        <div 
+          ref={editorRef} 
+          className="relative bg-[hsl(var(--editor-content-background))]"
+          onClick={handleEditorClick}
+        >
+          <EditorContent 
+            editor={editor} 
+            className="prose dark:prose-invert max-w-none min-h-[300px] p-4 focus:outline-none caret-[hsl(var(--primary))] cursor-text"
+            aria-label="리치 텍스트 편집기" 
+          />
+          <SlashCommandMenu
+            editor={editor}
+            command={slashCommand}
+            isOpen={slashCommandOpen}
+            setIsOpen={setSlashCommandOpen}
+            onSelect={handleSlashCommand}
+            position={slashCommandPosition}
+          />
         </div>
       </div>
     )
@@ -855,14 +1026,53 @@ export default function RichTextEditor() {
   }, []);
 
   return (
-    <div className="w-full overflow-x-hidden dark:bg-gray-900">
+    <div 
+      className="w-full overflow-x-hidden bg-[hsl(var(--background))]"
+      style={{
+        animation: prefersReducedMotion ? 'none' : 'fadeIn 0.3s ease-out'
+      } as React.CSSProperties}
+    >
+      <style jsx global>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        @keyframes zoomIn {
+          from { transform: scale(0.95); opacity: 0; }
+          to { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes slideIn {
+          from { transform: translateY(-10px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+
+        .cursor-pointer {
+          cursor: pointer;
+        }
+
+        .cursor-text {
+          cursor: text;
+        }
+
+        .cursor-default {
+          cursor: default;
+        }
+
+        .cursor-not-allowed {
+          cursor: not-allowed;
+        }
+      `}</style>
       <div className="container mx-auto py-6 px-4 max-w-5xl">
         <input
+          ref={titleInputRef}
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="제목을 입력하세요"
-          className="w-full text-3xl font-bold mb-6 bg-transparent border-0 focus:ring-0 focus:outline-none placeholder-gray-400 dark:text-white dark:placeholder-gray-500"
+          className="w-full text-3xl font-bold mb-6 bg-transparent border-0 focus:ring-0 focus:outline-none placeholder-[hsl(var(--muted-foreground))] text-[hsl(var(--foreground))] cursor-text"
+          aria-label="문서 제목"
         />
 
         {renderToolbar()}
