@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useEffect, useRef } from 'react'
+import { createContext, useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { ThemeProvider, useTheme } from 'next-themes'
 import { SessionProvider } from 'next-auth/react'
@@ -45,9 +45,15 @@ export const AppContext = createContext<{ previousPathname?: string }>({})
 export function Providers({ children }: { children: React.ReactNode }) {
   let pathname = usePathname()
   let previousPathname = usePrevious(pathname)
+  const [mounted, setMounted] = useState(false)
   
   // 로그인 페이지 감지
   const isLoginPage = pathname === '/login'
+
+  // 클라이언트에서만 ThemeWatcher 렌더링하기 위함
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   return (
     <SessionProvider>
@@ -57,7 +63,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           disableTransitionOnChange
           forcedTheme={isLoginPage ? "light" : undefined} // 로그인 페이지일 때만 라이트 테마 강제 적용
         >
-          {!isLoginPage && <ThemeWatcher />} {/* 로그인 페이지에서는 ThemeWatcher 비활성화 */}
+          {mounted && !isLoginPage && <ThemeWatcher />} {/* 마운트 된 후, 로그인 페이지가 아닐 때만 ThemeWatcher 렌더링*/}
           {children}
         </ThemeProvider>
       </AppContext.Provider>
