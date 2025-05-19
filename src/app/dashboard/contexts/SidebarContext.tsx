@@ -1,17 +1,8 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode, Dispatch, SetStateAction } from 'react';
-// import { NavigationItem } from '../components/layout/Sidebar'; // 이제 여기서 직접 정의하고 export
-import { Calendar, FileText, BarChart3, FolderKanban } from 'lucide-react'; // Icon 타입은 React.ElementType으로 대체
-
-// 네비게이션 타입 정의 및 export
-export interface NavigationItem {
-  name: string;
-  href: string;
-  icon: React.ElementType; // LucideIcon 대신 React.ElementType 사용
-  current?: boolean; 
-  hasPanel?: boolean;
-}
+import { createContext, useContext, useState, useEffect, ReactNode, Dispatch, SetStateAction } from 'react';
+import { Calendar, FileText, BarChart3, FolderKanban } from 'lucide-react';
+import { NavigationItem } from '../types';
 
 const mainNavigationData: NavigationItem[] = [
   { name: 'Calendar', href: '#', icon: Calendar },
@@ -22,55 +13,88 @@ const mainNavigationData: NavigationItem[] = [
 ];
 
 interface SidebarContextType {
+  // 사이드바 상태
   sidebarOpen: boolean;
   setSidebarOpen: Dispatch<SetStateAction<boolean>>;
   collapsed: boolean;
   setCollapsed: Dispatch<SetStateAction<boolean>>;
-  toggleSidebarCollapse: () => void; // 편의 함수
+  toggleSidebarCollapse: () => void;
+  
+  // 네비게이션 상태
   activeNavItem: string;
   setActiveNavItem: Dispatch<SetStateAction<string>>;
-  navigationItems: NavigationItem[]; // 네비게이션 데이터 추가
-  handleNavItemClick: (item: NavigationItem) => void; // 강화된 핸들러
-
-  // 패널 상태 추가
+  navigationItems: NavigationItem[];
+  
+  // 패널 상태
   projectPanelOpen: boolean;
   setProjectPanelOpen: Dispatch<SetStateAction<boolean>>;
   documentPanelOpen: boolean;
   setDocumentPanelOpen: Dispatch<SetStateAction<boolean>>;
-  // toggleDocumentPanel, toggleProjectPanel은 handleNavItemClick으로 통합되거나 필요시 유지
+  
+  // 네비게이션 핸들러
+  handleNavItemClick: (item: NavigationItem) => void;
+  
+  // 모바일 관련 상태
+  isMobileView: boolean;
 }
 
 const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
 
 export function SidebarProvider({ children }: { children: ReactNode }) {
+  // 기본 상태들
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
-  const [activeNavItem, setActiveNavItem] = useState('Calendar'); // 기본값 설정
+  const [activeNavItem, setActiveNavItem] = useState('Calendar');
   
-  // 패널 상태 추가
+  // 패널 상태
   const [projectPanelOpen, setProjectPanelOpen] = useState(false);
   const [documentPanelOpen, setDocumentPanelOpen] = useState(false);
+  
+  // 모바일 상태 감지
+  const [isMobileView, setIsMobileView] = useState(false);
+  
+  useEffect(() => {
+    const checkMobileView = () => {
+      const isMobile = window.innerWidth < 1024;
+      setIsMobileView(isMobile);
+      
+      // 모바일 환경에서는 사이드바를 기본적으로 접힌 상태로 설정
+      if (isMobile && !collapsed) {
+        setCollapsed(true);
+      }
+    };
+    
+    checkMobileView();
+    window.addEventListener('resize', checkMobileView);
+    return () => window.removeEventListener('resize', checkMobileView);
+  }, [collapsed]);
 
   const toggleSidebarCollapse = () => setCollapsed(!collapsed);
 
-  // 강화된 네비게이션 아이템 클릭 핸들러
+  // 네비게이션 아이템 클릭 핸들러
   const handleNavItemClick = (item: NavigationItem) => {
     setActiveNavItem(item.name);
 
+    // 패널 토글 로직
     if (item.name === 'Documents') {
-      const newDocPanelOpen = !documentPanelOpen;
+      // 같은 항목 재클릭 시 패널 닫기, 아니면 열기
+      const newDocPanelOpen = item.name === activeNavItem ? !documentPanelOpen : true;
       setDocumentPanelOpen(newDocPanelOpen);
-      setProjectPanelOpen(false); // 다른 패널은 닫음
+      setProjectPanelOpen(false); // 다른 패널 닫기
     } else if (item.name === 'Projects') {
-      const newProjPanelOpen = !projectPanelOpen;
+      const newProjPanelOpen = item.name === activeNavItem ? !projectPanelOpen : true;
       setProjectPanelOpen(newProjPanelOpen);
-      setDocumentPanelOpen(false); // 다른 패널은 닫음
+      setDocumentPanelOpen(false); // 다른 패널 닫기
     } else {
-      // Calendar, Reports 등 일반 아이템 클릭 시 모든 패널 닫기
+      // 패널이 없는 항목 클릭 시 모든 패널 닫기
       setDocumentPanelOpen(false);
       setProjectPanelOpen(false);
     }
-    // 모바일 환경에서 사이드바를 닫는 로직은 Sidebar 컴포넌트에서 setSidebarOpen(false) 호출로 처리
+    
+    // 모바일 환경에서는 네비게이션 클릭 후 사이드바 닫기
+    if (isMobileView) {
+      setSidebarOpen(false);
+    }
   };
 
   return (
@@ -83,14 +107,13 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
         toggleSidebarCollapse,
         activeNavItem,
         setActiveNavItem,
-        navigationItems: mainNavigationData, // 네비게이션 데이터 제공
-        handleNavItemClick, // 강화된 핸들러 제공
+        navigationItems: mainNavigationData,
+        handleNavItemClick,
         projectPanelOpen,
         setProjectPanelOpen,
         documentPanelOpen,
         setDocumentPanelOpen,
-        // toggleDocumentPanel, // handleNavItemClick으로 통합 또는 필요시 개별 제공
-        // toggleProjectPanel,
+        isMobileView,
       }}
     >
       {children}
