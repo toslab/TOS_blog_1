@@ -274,8 +274,7 @@ export function Header() {
   
   // 스크롤 관련 useEffect도 여기로 이동
   useEffect(() => {
-    // early return으로 효과가 실행되지 않도록 할 수 있습니다
-    if (pathname === '/login') return;
+    if (pathname === '/login') return; // 로그인 페이지에서는 스크롤 이벤트 리스너를 등록하지 않음
     
     let downDelay = avatarRef.current?.offsetTop ?? 0
     let upDelay = 64

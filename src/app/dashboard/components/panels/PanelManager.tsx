@@ -14,12 +14,14 @@ interface PanelManagerProps {
   children: ReactNode;
   documentsData: Document[];
   onOpenDocumentEditor: () => void;
+  handleDocumentClick: (doc: Document) => void;
 }
 
 export default function PanelManager({
   children,
   documentsData,
   onOpenDocumentEditor,
+  handleDocumentClick,
 }: PanelManagerProps) {
   const {
     documentPanelOpen,
@@ -35,7 +37,7 @@ export default function PanelManager({
   } = useSearch();
 
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
-  const [documentArchiveOpen, setDocumentArchiveOpen] = useState(false);
+  const [documentArchiveOpen, setDocumentArchiveOpenInternal] = useState(false);
 
   // 패널 스타일 정의
   const panelBaseStyle: React.CSSProperties = {
@@ -61,10 +63,11 @@ export default function PanelManager({
     animation: 'slideInFromBottom var(--transition-normal, 250ms) var(--ease-out, cubic-bezier(0, 0, 0.2, 1))',
   };
 
-  const handleInternalDocumentClick = (doc: Document) => {
+  const internalAndExternalDocumentClickHandler = (doc: Document) => {
+    handleDocumentClick(doc);
     setSelectedDocument(doc);
     setDocumentPanelOpen(false);
-    setDocumentArchiveOpen(false);
+    setDocumentArchiveOpenInternal(false);
     setProjectPanelOpen(false);
   };
 
@@ -85,9 +88,9 @@ export default function PanelManager({
               isOpen={documentPanelOpen} 
               onClose={() => setDocumentPanelOpen(false)}
               documentsData={documentsData}
-              onDocumentClick={handleInternalDocumentClick}
+              onDocumentClick={internalAndExternalDocumentClickHandler}
               onOpenDocumentEditor={onOpenDocumentEditor}
-              onOpenDocumentArchive={() => setDocumentArchiveOpen(true)}
+              onOpenDocumentArchive={() => setDocumentArchiveOpenInternal(true)}
             />
           </div>
         )}
@@ -111,8 +114,8 @@ export default function PanelManager({
       {/* Document Archive Dialog */}
       <DocumentArchiveDialog 
         isOpen={documentArchiveOpen}
-        onClose={() => setDocumentArchiveOpen(false)}
-        onDocumentClick={handleInternalDocumentClick} 
+        onClose={() => setDocumentArchiveOpenInternal(false)}
+        onDocumentClick={internalAndExternalDocumentClickHandler}
       />
 
       {/* DocumentViewer */}

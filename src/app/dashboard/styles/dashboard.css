@@ -51,119 +51,177 @@ body {
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
+    /* 기본 배경 및 텍스트 색상 */
+    --background: 0 0% 100%; /* 기존 값 유지 */
+    --foreground: 0 0% 3.9%; /* 기존 값 유지 */
+    --page-background: 240 5%, 96%; /* 새로운 변수: 페이지 전체 배경 */
+    --panel-background: 0 0% 100%; /* 새로운 변수: 패널 배경 */
+    --text-primary: 0 0% 10%;    /* 새로운 변수: 주 텍스트 색상 */
+    --text-secondary: 0 0% 40%;  /* 새로운 변수: 보조 텍스트 색상 */
+    --text-muted: 0 0% 60%;      /* 새로운 변수: 흐린 텍스트 색상 */
+    --text-on-accent: 0 0% 100%; /* 새로운 변수: 강조색 위의 텍스트 */
+
+    /* 컴포넌트별 배경 및 텍스트 */
+    --card: 0 0% 100%; /* 기존 값 유지 */
+    --card-foreground: 0 0% 3.9%; /* 기존 값 유지 */
+    --popover: 0 0% 100%; /* 기존 값 유지 */
+    --popover-foreground: 0 0% 3.9%; /* 기존 값 유지 */
+    --primary: 217.2 91.2% 59.8%; /* 기존 primary 색상 조정 (shadcn/ui blue) */
+    --primary-foreground: 0 0% 100%; /* 기존 primary-foreground, 대비를 위해 흰색 선호 */
+    --secondary: 0 0% 96.1%; /* 기존 값 유지 */
+    --secondary-foreground: 0 0% 9%; /* 기존 값 유지 */
+    --muted: 0 0% 96.1%; /* 기존 값 유지 */
+    --muted-foreground: 0 0% 45.1%; /* 기존 값 유지 */
+    --accent: 217.2 91.2% 59.8%; /* 새로운 변수: 강조색 (primary와 동일하게 시작) */
+    --accent-foreground: 0 0% 100%; /* 새로운 변수: 강조색 위의 텍스트 (primary-foreground와 동일하게 시작) */
     
-    /* Z-index 관리를 위한 변수 */
+    --destructive: 0 84.2% 60.2%; /* 기존 값 유지 */
+    --destructive-foreground: 0 0% 98%; /* 기존 값 유지 */
+
+    /* 테두리 및 구분선 */
+    --border: 0 0% 89.8%; /* 기존 값 유지. --border-color 로도 사용 가능 */
+    --border-color: 0 0% 89.8%; /* 규칙에 명시된 변수 */
+    --input: 0 0% 89.8%; /* 기존 값 유지 */
+    --ring: 217.2 91.2% 59.8%; /* 기존 ring 색상 조정 (primary와 일관성) */
+
+    /* 레이아웃 관련 변수 */
+    --header-height: 4rem;
+    --sidebar-icon-bar-width: 5rem; /* 새로운 변수: 아이콘 바 너비 */
+    --sidebar-icon-bar-background: 240 4%, 90%; /* 새로운 변수: 아이콘 바 배경 */
+    --main-menu-panel-width: 18rem; /* 새로운 변수: 주 메뉴 패널 너비 */
+    --panel-padding-x: 1.5rem; /* 새로운 변수: 패널 좌우 패딩 (24px) */
+    --panel-padding-y: 2rem;   /* 새로운 변수: 패널 상하 패딩 (32px) */
+
+    /* 아이템 상태 관련 변수 */
+    --active-item-background: 217.2 91.2% 59.8%; /* 새로운 변수: 활성 아이템 배경 (primary) */
+    --active-item-foreground: 0 0% 100%;       /* 새로운 변수: 활성 아이템 텍스트 (primary-foreground) */
+    --hover-bg-light: 0 0% 94%;               /* 새로운 변수: 밝은 배경 호버 */
+    --hover-bg-dark: 0 0% 12%;                /* 새로운 변수: 어두운 배경 호버 (다크모드용) */
+
+    /* 아이콘 스타일 */
+    --icon-color: 0 0% 40%; /* 새로운 변수: 기본 아이콘 색상 (text-secondary와 유사) */
+    --icon-color-active: 217.2 91.2% 59.8%; /* 새로운 변수: 활성 아이콘 색상 (primary) */
+    --icon-size: 1.25rem; /* 20px */
+    --icon-stroke-width: 2;
+    --icon-stroke-width-active: 2.5;
+
+    /* 그림자 */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    --shadow-panel: var(--shadow-lg); /* 새로운 변수: 패널용 그림자 */
+    --shadow-icon-active: 0 0 10px 0 rgb(var(--primary-rgb) / 0.5); /* primary 색상 기반 그림자 (RGB 필요) */
+
+    /* 둥근 모서리 */
+    --radius-sm: 0.25rem; /* 4px */
+    --radius: 0.5rem;     /* 8px, 기존 값 유지 */
+    --radius-md: 0.75rem; /* 12px */
+    --radius-lg: 1rem;    /* 16px */
+    --radius-xl: 1.5rem;  /* 24px */
+    --radius-panel: var(--radius-xl); /* 새로운 변수: 패널용 둥근 모서리 */
+
+    /* Z-index (기존 값 유지 또는 필요시 조정) */
     --z-header: 40;
-    --z-sidebar: 30;
-    --z-panel: 20;
+    --z-sidebar: 30; /* 아이콘 바, 메인 메뉴 패널 모두 해당 가능 */
+    --z-panel: 20;   /* 콘텐츠 패널 */
     --z-overlay: 10;
     --z-modal: 50;
     --z-tooltip: 60;
     --z-document-viewer: 60;
-    
-    /* 애니메이션 속도 및 타이밍 */
+
+    /* 애니메이션 (기존 값 유지 또는 필요시 조정) */
     --transition-fast: 150ms;
     --transition-normal: 250ms;
     --transition-slow: 350ms;
     --ease-default: cubic-bezier(0.4, 0, 0.2, 1);
-    --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
-    --ease-out: cubic-bezier(0, 0, 0.2, 1);
-    --ease-in: cubic-bezier(0.4, 0, 1, 1);
-    
-    /* Sidebar, Panel, Header variables */
-    --header-height: 4rem;
-    --sidebar-width: 18rem;
-    --sidebar-width-collapsed: 5rem;
-    --panel-width: 18rem;
-    --panel-width-mobile: 100%;
-    --header-height-mobile: 3.5rem;
-    
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* 알림 배지 */
+    --notification-badge-bg: var(--destructive);
+    --notification-badge-text: var(--destructive-foreground);
+
+    /* 기존 에디터 관련 변수들은 유지 */
     --editor-toolbar-background: 0 0% 98%;
     --editor-toolbar-border: 0 0% 90%;
     --editor-content-background: 0 0% 100%;
     --editor-text-color: 0 0% 10%;
     --editor-placeholder-color: 0 0% 60%;
     --editor-markdown-bg: 0 0% 98%;
+
+    /* RGB 값 (그림자 등에 사용하기 위함) - HSL에서 변환 필요 */
+    --primary-rgb: 59, 130, 246; /* 예시: hsl(217.2 91.2% 59.8%) */
   }
   .dark {
+    /* 다크 모드 기본 배경 및 텍스트 색상 */
     --background: 0 0% 3.9%;
     --foreground: 0 0% 98%;
+    --page-background: 240 4%, 10%;   /* 새로운 변수: 다크모드 페이지 전체 배경 */
+    --panel-background: 0 0% 12%;     /* 새로운 변수: 다크모드 패널 배경 */
+    --text-primary: 0 0% 95%;        /* 새로운 변수: 다크모드 주 텍스트 */
+    --text-secondary: 0 0% 65%;      /* 새로운 변수: 다크모드 보조 텍스트 */
+    --text-muted: 0 0% 45%;          /* 새로운 변수: 다크모드 흐린 텍스트 */
+    --text-on-accent: 0 0% 100%;     /* 새로운 변수: 강조색 위의 텍스트 (동일 유지 가능) */
+
+    /* 컴포넌트별 배경 및 텍스트 */
     --card: 0 0% 3.9%;
     --card-foreground: 0 0% 98%;
     --popover: 0 0% 3.9%;
     --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
+    --primary: 217.2 91.2% 59.8%; /* 다크모드에서도 primary는 동일하게 유지하거나 살짝 밝게 조정 */
+    --primary-foreground: 0 0% 100%;
     --secondary: 0 0% 14.9%;
     --secondary-foreground: 0 0% 98%;
     --muted: 0 0% 14.9%;
     --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
+    --accent: 217.2 91.2% 59.8%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 72.2% 50.6%; /* 다크모드에 맞게 조정 */
     --destructive-foreground: 0 0% 98%;
+
+    /* 테두리 및 구분선 */
     --border: 0 0% 14.9%;
+    --border-color: 0 0% 14.9%;
     --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-    /* Sidebar, Panel, Header variables for dark mode */
-    --header-height: 4rem; 
-    --sidebar-width: 18rem;
-    --sidebar-width-collapsed: 5rem;
-    --panel-width: 18rem;   
-    --panel-width-mobile: 100%;
-    --header-height-mobile: 3.5rem;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --ring: 217.2 91.2% 59.8%;
+
+    /* 레이아웃 관련 변수 */
+    --sidebar-icon-bar-background: 240 4%, 15%; /* 새로운 변수: 다크모드 아이콘 바 배경 */
+    
+    /* 아이템 상태 관련 변수 */
+    --active-item-background: 217.2 91.2% 59.8%;
+    --active-item-foreground: 0 0% 100%;
+    --hover-bg-light: 0 0% 18%; /* 다크모드에 맞는 밝은 호버 (상대적으로) */
+    --hover-bg-dark: 0 0% 22%;  /* 다크모드에 맞는 어두운 호버 */
+
+    /* 아이콘 스타일 */
+    --icon-color: 0 0% 65%; /* (text-secondary와 유사) */
+    --icon-color-active: 217.2 91.2% 59.8%;
+
+    /* 그림자 (다크모드에서는 그림자가 덜 보일 수 있으므로 조정하거나, white/transparent 사용 고려) */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.15); /* 약간 더 어둡게 */
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.2), 0 1px 2px -1px rgb(0 0 0 / 0.2);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.2), 0 2px 4px -2px rgb(0 0 0 / 0.2);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.2), 0 4px 6px -4px rgb(0 0 0 / 0.2);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.2), 0 8px 10px -6px rgb(0 0 0 / 0.2);
+    --shadow-panel: var(--shadow-lg);
+    --shadow-icon-active: 0 0 10px 0 rgb(var(--primary-rgb) / 0.7); /* 다크모드에서 더 잘보이도록 alpha값 조정 */
+
+    /* 알림 배지 */
+    --notification-badge-bg: var(--destructive);
+    --notification-badge-text: var(--destructive-foreground);
+
+    /* 기존 에디터 관련 변수들 다크모드 값 */
     --editor-toolbar-background: 0 0% 10%;
     --editor-toolbar-border: 0 0% 20%;
     --editor-content-background: 0 0% 12%;
     --editor-text-color: 0 0% 90%;
     --editor-placeholder-color: 0 0% 50%;
     --editor-markdown-bg: 0 0% 10%;
+
+    /* RGB 값 (그림자 등에 사용하기 위함) - HSL에서 변환 필요 */
+    /* --primary-rgb는 라이트/다크 동일하게 사용 가능 */
   }
 }
 

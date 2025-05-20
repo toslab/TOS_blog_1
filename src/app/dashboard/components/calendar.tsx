@@ -1,9 +1,12 @@
 "use client"
 
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react"
-import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid"
+import { ChevronLeftIcon, ChevronRightIcon, PlusCircleIcon } from "@heroicons/react/20/solid"
 import { EllipsisVerticalIcon } from "@heroicons/react/24/outline"
 import { useState, useEffect } from "react"
+import { cn } from "@/lib/utils"
+import { useSidebar } from "../contexts/SidebarContext"
+import ListItem from "./common/ListItem"
 
 interface Day {
   date: string
@@ -143,10 +146,6 @@ const initialDocuments: Document[] = [
   },
 ]
 
-function classNames(...classes: string[]) {
-  return classes.filter(Boolean).join(" ")
-}
-
 // 날짜를 비교하는 유틸리티 함수
 function isDateInRange(date: string, startDate: string | null, endDate: string | null): boolean {
   if (!startDate) return false
@@ -165,6 +164,7 @@ interface CalendarProps {
 }
 
 export default function Calendar({ onCreateDocument }: CalendarProps) {
+  const { isMobileView } = useSidebar()
   const [days, setDays] = useState<Day[]>(initialDays)
   const [documents, setDocuments] = useState<Document[]>(initialDocuments)
   const [startDate, setStartDate] = useState<string | null>("2022-01-21")
@@ -187,7 +187,7 @@ export default function Calendar({ onCreateDocument }: CalendarProps) {
       hasDocument: uniqueDates.includes(day.date),
     }))
     setDays(updatedDays)
-  }, [documents])
+  }, [documents, days])
 
   // 날짜 범위 내의 문서만 필터링
   const filteredDocuments = documents.filter((doc) => {
@@ -238,19 +238,19 @@ export default function Calendar({ onCreateDocument }: CalendarProps) {
     })
 
     setDays(updatedDays)
-  }, [startDate, endDate, documentDates])
+  }, [startDate, endDate, documentDates, days])
 
   // 문서 상태에 따른 배지 색상 설정
   const getStatusBadgeClass = (status: Document["status"]) => {
     switch (status) {
       case "published":
-        return "bg-green-100 text-green-800"
+        return "bg-green-100 text-green-700 dark:bg-green-700 dark:text-green-100"
       case "scheduled":
-        return "bg-blue-100 text-blue-800"
+        return "bg-blue-100 text-blue-800 dark:bg-blue-700 dark:text-blue-100"
       case "draft":
-        return "bg-gray-100 text-gray-800"
+        return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
     }
   }
 
@@ -282,39 +282,55 @@ export default function Calendar({ onCreateDocument }: CalendarProps) {
     setSelectionMode("start")
   }
 
+  // 발행 문서 목록을 ListItem으로 표시하기 위한 데이터 변환
+  const documentListItems = filteredDocuments.map(doc => ({
+    id: `cal-doc-${doc.id}`,
+    name: doc.title,
+    type: 'link' as const,
+    description: `${doc.category} | ${doc.author.name} | ${doc.publishDate}`,
+    badgeCount: doc.status === 'published' ? undefined : (doc.status === 'scheduled' ? 1 : 0),
+    statusText: getStatusText(doc.status),
+    statusClass: getStatusBadgeClass(doc.status),
+    imageUrl: doc.author.imageUrl,
+  }));
+
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm">
-      <div className="md:grid md:grid-cols-2 md:divide-x md:divide-gray-200">
-        <div className="md:pr-14">
+    <div 
+      className={cn(
+        "h-full overflow-y-auto bg-panel-background rounded-xl shadow-panel",
+        isMobileView ? "p-4" : "p-panel-padding-x lg:p-panel-padding-y"
+      )}
+    >
+      <div className="md:grid md:grid-cols-2 md:divide-x md:divide-border">
+        <div className="md:pr-6 lg:pr-8">
           <div className="flex items-center">
-            <h2 className="flex-auto text-sm font-semibold text-gray-900">{currentMonth}</h2>
+            <h2 className="flex-auto text-lg font-semibold text-text-primary">{currentMonth}</h2>
             <button
               type="button"
-              className="-my-1.5 flex flex-none items-center justify-center p-1.5 text-gray-400 hover:text-gray-500"
+              className="-my-1.5 flex flex-none items-center justify-center p-1.5 text-icon-color hover:text-text-primary rounded-md hover:bg-hover-bg-light"
             >
               <span className="sr-only">이전 달</span>
-              <ChevronLeftIcon className="size-5" aria-hidden="true" />
+              <ChevronLeftIcon className="h-5 w-5" aria-hidden="true" />
             </button>
             <button
               type="button"
-              className="-my-1.5 -mr-1.5 ml-2 flex flex-none items-center justify-center p-1.5 text-gray-400 hover:text-gray-500"
+              className="-my-1.5 ml-2 flex flex-none items-center justify-center p-1.5 text-icon-color hover:text-text-primary rounded-md hover:bg-hover-bg-light"
             >
               <span className="sr-only">다음 달</span>
-              <ChevronRightIcon className="size-5" aria-hidden="true" />
+              <ChevronRightIcon className="h-5 w-5" aria-hidden="true" />
             </button>
           </div>
 
-          {/* 날짜 범위 선택 안내 */}
-          <div className="mt-3 text-xs text-gray-500 flex justify-between items-center">
+          <div className="mt-3 text-xs text-text-muted flex justify-between items-center">
             <div>{selectionMode === "start" ? "시작일을 선택하세요" : "종료일을 선택하세요"}</div>
             {(startDate || endDate) && (
-              <button onClick={resetDateRange} className="text-xs text-indigo-600 hover:text-indigo-800">
+              <button onClick={resetDateRange} className="text-xs text-primary hover:text-primary/80">
                 선택 초기화
               </button>
             )}
           </div>
 
-          <div className="mt-6 grid grid-cols-7 text-center text-xs/6 text-gray-500">
+          <div className={cn("mt-4 grid grid-cols-7 text-center text-xs text-text-secondary")}>
             <div>월</div>
             <div>화</div>
             <div>수</div>
@@ -325,43 +341,34 @@ export default function Calendar({ onCreateDocument }: CalendarProps) {
           </div>
           <div className="mt-2 grid grid-cols-7 text-sm">
             {days.map((day, dayIdx) => (
-              <div key={day.date} className={classNames(dayIdx > 6 && "border-t border-gray-200", "py-2")}>
-                <div className="relative mx-auto w-8 h-8">
+              <div key={day.date} className={cn(dayIdx > 6 && "border-t border-border", "py-1.5")}>
+                <div className="relative mx-auto w-9 h-9">
                   <button
                     type="button"
                     onClick={() => handleDateSelect(day)}
-                    className={classNames(
-                      // 시작일 또는 종료일인 경우
-                      day.isSelected && "text-white font-semibold",
-                      // 범위 내 날짜인 경우 (시작일과 종료일 제외)
-                      !day.isSelected && day.isInRange && "bg-indigo-100 text-indigo-800",
-                      // 오늘 날짜인 경우
-                      !day.isSelected && !day.isInRange && day.isToday && "text-indigo-600 font-semibold",
-                      // 현재 월의 날짜인 경우
-                      !day.isSelected && !day.isInRange && !day.isToday && day.isCurrentMonth && "text-gray-900",
-                      // 다른 월의 날짜인 경우
-                      !day.isSelected && !day.isInRange && !day.isToday && !day.isCurrentMonth && "text-gray-400",
-                      // 시작일 배경색
-                      day.isRangeStart && "bg-indigo-600",
-                      // 종료일 배경색
-                      day.isRangeEnd && "bg-indigo-600",
-                      // 호버 효과
-                      !day.isSelected && "hover:bg-gray-200",
-                      "w-full h-full flex items-center justify-center rounded-full",
-                      // 범위 내 날짜의 좌우 모서리 처리
+                    className={cn(
+                      day.isSelected && "text-active-item-foreground font-semibold",
+                      !day.isSelected && day.isInRange && "bg-active-item-background/20 text-primary",
+                      !day.isSelected && !day.isInRange && day.isToday && "text-primary font-semibold",
+                      !day.isSelected && !day.isInRange && !day.isToday && day.isCurrentMonth && "text-text-primary",
+                      !day.isSelected && !day.isInRange && !day.isToday && !day.isCurrentMonth && "text-text-muted",
+                      day.isRangeStart && "bg-primary text-primary-foreground",
+                      day.isRangeEnd && "bg-primary text-primary-foreground",
+                      !day.isSelected && "hover:bg-hover-bg-light",
+                      "w-full h-full flex items-center justify-center rounded-full transition-colors duration-150",
                       day.isRangeStart && !day.isRangeEnd && "rounded-r-none",
                       day.isRangeEnd && !day.isRangeStart && "rounded-l-none",
                       day.isInRange && !day.isRangeStart && !day.isRangeEnd && "rounded-none",
                     )}
                   >
-                    <time dateTime={day.date}>{day.date.split("-").pop().replace(/^0/, "")}</time>
+                    <time dateTime={day.date}>{day.date.split("-").pop()?.replace(/^0/, "")}</time>
                   </button>
                   {day.hasDocument && (
                     <div
-                      style={{ top: "0.12rem" }}
-                      className={classNames(
-                        "absolute left-1/2 transform -translate-x-1/2 w-1 h-1 rounded-full z-10",
-                        day.isSelected ? "bg-white" : "bg-indigo-600",
+                      className={cn(
+                        "absolute left-1/2 transform -translate-x-1/2 w-1.5 h-1.5 rounded-full z-10",
+                        day.isSelected ? "bg-active-item-foreground" : "bg-primary",
+                        isMobileView ? "top-1" : "top-0.5"
                       )}
                     ></div>
                   )}
@@ -370,90 +377,42 @@ export default function Calendar({ onCreateDocument }: CalendarProps) {
             ))}
           </div>
         </div>
-        <section className="mt-12 md:mt-0 md:pl-14">
-          <h2 className="text-base font-semibold text-gray-900">
-            발행 문서: <span className="text-indigo-600">{getSelectedDateRangeText()}</span>
+        <section className="mt-8 md:mt-0 md:pl-6 lg:pl-8">
+          <h2 className="text-base font-semibold text-text-primary">
+            발행 문서: <span className="text-primary">{getSelectedDateRangeText()}</span>
           </h2>
-          <ol className="mt-4 flex flex-col gap-y-1 text-sm/6 text-gray-500">
-            {filteredDocuments.length > 0 ? (
-              filteredDocuments.map((doc) => (
-                <li
-                  key={doc.id}
-                  className="group flex items-center gap-x-4 rounded-xl px-4 py-2 focus-within:bg-gray-100 hover:bg-gray-100"
-                >
-                  <img
-                    src={doc.author.imageUrl || "/placeholder.svg"}
-                    alt=""
-                    className="size-10 flex-none rounded-full"
-                  />
-                  <div className="flex-auto">
-                    <div className="flex items-center gap-2">
-                      <p className="text-gray-900">{doc.title}</p>
-                      <span
-                        className={classNames(
-                          "inline-flex rounded-full px-2 py-0.5 text-xs font-medium",
-                          getStatusBadgeClass(doc.status),
-                        )}
-                      >
-                        {getStatusText(doc.status)}
-                      </span>
-                    </div>
-                    <div className="mt-0.5 flex items-center gap-2">
-                      <span className="text-xs text-gray-500">{doc.category}</span>
-                      <span className="text-xs text-gray-400">•</span>
-                      <time dateTime={doc.publishDatetime} className="text-xs text-gray-500">
-                        {doc.publishDatetime.split("T")[0].replace(/(\d{4})-(\d{2})-(\d{2})/, "$1-$2-$3")}{" "}
-                        {doc.publishDate}
-                      </time>
-                    </div>
-                  </div>
-                  <Menu as="div" className="relative opacity-0 group-hover:opacity-100 focus-within:opacity-100">
-                    <div>
-                      <MenuButton className="-m-2 flex items-center rounded-full p-1.5 text-gray-500 hover:text-gray-600">
-                        <span className="sr-only">옵션 열기</span>
-                        <EllipsisVerticalIcon className="size-6" aria-hidden="true" />
-                      </MenuButton>
-                    </div>
-
-                    <MenuItems
-                      transition
-                      className="absolute right-0 z-10 mt-2 w-36 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-hidden data-closed:scale-95 data-closed:opacity-0 data-enter:duration-100 data-enter:ease-out data-leave:duration-75 data-leave:ease-in"
-                    >
-                      <div className="py-1">
-                        <MenuItem>
-                          <a
-                            href="#"
-                            className="block px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:text-gray-900"
-                          >
-                            문서 보기
-                          </a>
-                        </MenuItem>
-                        <MenuItem>
-                          <a
-                            href="#"
-                            className="block px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:text-gray-900"
-                          >
-                            편집
-                          </a>
-                        </MenuItem>
-                      </div>
-                    </MenuItems>
-                  </Menu>
-                </li>
-              ))
-            ) : (
-              <li className="py-4 text-center text-gray-500">선택한 기간에 발행된 문서가 없습니다.</li>
-            )}
-          </ol>
-          <div className="mt-6">
-            <button
-              type="button"
-              onClick={onCreateDocument}
-              className="w-full rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500"
-            >
-              새 문서 작성
-            </button>
-          </div>
+          {documentListItems.length > 0 ? (
+            <ul className="mt-4 space-y-1">
+              {documentListItems.map((docItem) => (
+                <ListItem
+                  key={docItem.id}
+                  id={docItem.id}
+                  name={docItem.name}
+                  type={docItem.type}
+                  description={docItem.description}
+                  badgeCount={docItem.badgeCount}
+                  statusText={docItem.statusText}
+                  statusClass={docItem.statusClass}
+                  imageUrl={docItem.imageUrl}
+                />
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-4 text-sm text-text-muted text-center">선택한 기간에 발행된 문서가 없습니다.</p>
+          )}
+          
+          {onCreateDocument && (
+            <div className="mt-6">
+              <button
+                type="button"
+                onClick={onCreateDocument}
+                className="w-full flex items-center justify-center gap-x-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              >
+                <PlusCircleIcon className="h-5 w-5" />
+                새 문서 작성
+              </button>
+            </div>
+          )}
         </section>
       </div>
     </div>

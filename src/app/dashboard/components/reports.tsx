@@ -20,6 +20,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/dashboard_UI/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/dashboard_UI/select"
 import { ArrowDown, ArrowUp, Users, Search, MousePointer, Clock, Globe, Zap } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { useSidebar } from "../contexts/SidebarContext"
 
 // 방문자 데이터
 const visitorData = [
@@ -99,7 +101,7 @@ const performanceData = [
 ]
 
 // 파이 차트 색상
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"]
+const COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "#FFBB28", "#FF8042", "#8884D8"]
 
 // 날짜 포맷 함수
 const formatDate = (dateStr: string) => {
@@ -119,6 +121,7 @@ const calculateChange = (current: number, previous: number) => {
 }
 
 export default function Reports() {
+  const { isMobileView } = useSidebar()
   const [timeRange, setTimeRange] = useState("2주")
 
   // 최근 데이터와 이전 기간 비교를 위한 계산
@@ -131,7 +134,12 @@ export default function Reports() {
   const pageViewChange = calculateChange(currentPageViews, previousPageViews)
 
   return (
-    <div className="space-y-6">
+    <div 
+      className={cn(
+        "h-full overflow-y-auto bg-panel-background rounded-xl shadow-panel space-y-6",
+        isMobileView ? "p-4" : "p-panel-padding-x lg:p-panel-padding-y"
+      )}
+    >
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">웹사이트 분석 보고서</h1>
         <Select value={timeRange} onValueChange={setTimeRange}>
@@ -149,15 +157,15 @@ export default function Reports() {
 
       {/* 주요 지표 요약 */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardContent className="p-6">
+        <Card className="bg-card text-card-foreground border-border shadow-sm">
+          <CardContent className="p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">총 방문자</p>
-                <p className="text-2xl font-bold">{formatNumber(currentVisitors)}</p>
+                <p className="text-sm font-medium text-text-secondary">총 방문자</p>
+                <p className="text-2xl font-bold text-text-primary">{formatNumber(currentVisitors)}</p>
               </div>
-              <div className="rounded-full bg-blue-100 p-3">
-                <Users className="h-6 w-6 text-blue-600" />
+              <div className="rounded-full bg-primary/10 p-3">
+                <Users className="h-6 w-6 text-primary" />
               </div>
             </div>
             <div className="mt-4 flex items-center">
@@ -166,23 +174,23 @@ export default function Reports() {
               ) : (
                 <ArrowDown className="mr-1 h-4 w-4 text-red-500" />
               )}
-              <span className={visitorChange > 0 ? "text-green-500" : "text-red-500"}>
+              <span className={cn(visitorChange > 0 ? "text-green-500" : "text-red-500", "font-medium")}>
                 {Math.abs(visitorChange).toFixed(1)}%
               </span>
-              <span className="ml-1 text-gray-500">지난 기간 대비</span>
+              <span className="ml-1 text-text-muted text-xs">지난 기간 대비</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-6">
+        <Card className="bg-card text-card-foreground border-border shadow-sm">
+          <CardContent className="p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">페이지뷰</p>
-                <p className="text-2xl font-bold">{formatNumber(currentPageViews)}</p>
+                <p className="text-sm font-medium text-text-secondary">페이지뷰</p>
+                <p className="text-2xl font-bold text-text-primary">{formatNumber(currentPageViews)}</p>
               </div>
-              <div className="rounded-full bg-purple-100 p-3">
-                <MousePointer className="h-6 w-6 text-purple-600" />
+              <div className="rounded-full bg-accent/10 p-3">
+                <MousePointer className="h-6 w-6 text-accent" />
               </div>
             </div>
             <div className="mt-4 flex items-center">
@@ -191,58 +199,58 @@ export default function Reports() {
               ) : (
                 <ArrowDown className="mr-1 h-4 w-4 text-red-500" />
               )}
-              <span className={pageViewChange > 0 ? "text-green-500" : "text-red-500"}>
+              <span className={cn(pageViewChange > 0 ? "text-green-500" : "text-red-500", "font-medium")}>
                 {Math.abs(pageViewChange).toFixed(1)}%
               </span>
-              <span className="ml-1 text-gray-500">지난 기간 대비</span>
+              <span className="ml-1 text-text-muted text-xs">지난 기간 대비</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-6">
+        <Card className="bg-card text-card-foreground border-border shadow-sm">
+          <CardContent className="p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">평균 체류 시간</p>
-                <p className="text-2xl font-bold">3분 45초</p>
+                <p className="text-sm font-medium text-text-secondary">평균 체류 시간</p>
+                <p className="text-2xl font-bold text-text-primary">3분 45초</p>
               </div>
-              <div className="rounded-full bg-green-100 p-3">
-                <Clock className="h-6 w-6 text-green-600" />
+              <div className="rounded-full bg-green-500/10 p-3">
+                <Clock className="h-6 w-6 text-green-500" />
               </div>
             </div>
             <div className="mt-4 flex items-center">
               <ArrowUp className="mr-1 h-4 w-4 text-green-500" />
-              <span className="text-green-500">12.5%</span>
-              <span className="ml-1 text-gray-500">지난 기간 대비</span>
+              <span className="text-green-500 font-medium">12.5%</span>
+              <span className="ml-1 text-text-muted text-xs">지난 기간 대비</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-6">
+        <Card className="bg-card text-card-foreground border-border shadow-sm">
+          <CardContent className="p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">이탈률</p>
-                <p className="text-2xl font-bold">32.4%</p>
+                <p className="text-sm font-medium text-text-secondary">이탈률</p>
+                <p className="text-2xl font-bold text-text-primary">32.4%</p>
               </div>
-              <div className="rounded-full bg-red-100 p-3">
-                <Zap className="h-6 w-6 text-red-600" />
+              <div className="rounded-full bg-red-500/10 p-3">
+                <Zap className="h-6 w-6 text-red-500" />
               </div>
             </div>
             <div className="mt-4 flex items-center">
               <ArrowDown className="mr-1 h-4 w-4 text-green-500" />
-              <span className="text-green-500">3.2%</span>
-              <span className="ml-1 text-gray-500">지난 기간 대비</span>
+              <span className="text-green-500 font-medium">3.2%</span>
+              <span className="ml-1 text-text-muted text-xs">지난 기간 대비</span>
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* 방문자 트렌드 그래프 */}
-      <Card>
+      <Card className="bg-card text-card-foreground border-border shadow-sm">
         <CardHeader>
-          <CardTitle>방문자 트렌드</CardTitle>
-          <CardDescription>일별 방문자 수와 페이지뷰 추이</CardDescription>
+          <CardTitle className="text-text-primary">방문자 트렌드</CardTitle>
+          <CardDescription className="text-text-muted">일별 방문자 수와 페이지뷰 추이</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-80">
@@ -256,32 +264,31 @@ export default function Reports() {
                   bottom: 0,
                 }}
               >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" tickFormatter={formatDate} />
-                <YAxis />
+                <defs>
+                  <linearGradient id="colorVisitors" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                  </linearGradient>
+                  <linearGradient id="colorPageViews" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--accent))" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="hsl(var(--accent))" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="date" tickFormatter={formatDate} stroke="hsl(var(--text-muted))" fontSize={12} />
+                <YAxis stroke="hsl(var(--text-muted))" fontSize={12} />
                 <Tooltip
-                  formatter={(value: number) => [formatNumber(value), ""]}
+                  contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))' }}
+                  labelStyle={{ color: 'hsl(var(--popover-foreground))' }}
+                  formatter={(value: number, name: string) => [
+                    formatNumber(value),
+                    name === 'visitors' ? '방문자 수' : '페이지뷰'
+                  ]}
                   labelFormatter={(label) => formatDate(label)}
                 />
-                <Legend />
-                <Area
-                  type="monotone"
-                  dataKey="visitors"
-                  name="방문자 수"
-                  stackId="1"
-                  stroke="#8884d8"
-                  fill="#8884d8"
-                  fillOpacity={0.3}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="pageViews"
-                  name="페이지뷰"
-                  stackId="2"
-                  stroke="#82ca9d"
-                  fill="#82ca9d"
-                  fillOpacity={0.3}
-                />
+                <Legend wrapperStyle={{ color: 'hsl(var(--text-secondary))'}} />
+                <Area type="monotone" dataKey="visitors" name="방문자 수" stackId="1" strokeWidth={2} stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorVisitors)" />
+                <Area type="monotone" dataKey="pageViews" name="페이지뷰" stackId="2" strokeWidth={2} stroke="hsl(var(--accent))" fillOpacity={1} fill="url(#colorPageViews)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -291,52 +298,41 @@ export default function Reports() {
       {/* 검색 키워드 및 트래픽 소스 */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {/* 검색 키워드 */}
-        <Card>
+        <Card className="bg-card text-card-foreground border-border shadow-sm">
           <CardHeader>
-            <CardTitle>인기 검색 키워드</CardTitle>
-            <CardDescription>방문자들이 사용한 주요 검색어</CardDescription>
+            <CardTitle className="text-text-primary">인기 검색 키워드</CardTitle>
+            <CardDescription className="text-text-muted">방문자들이 사용한 주요 검색어</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {keywordData.slice(0, 5).map((item, index) => (
-                <div key={index} className="flex items-center justify-between">
+                <div key={index} className="flex items-center justify-between text-sm">
                   <div className="flex items-center">
-                    <Search className="mr-2 h-4 w-4 text-gray-400" />
-                    <span className="text-sm font-medium">{item.keyword}</span>
+                    <Search className="mr-2 h-4 w-4 text-text-muted" />
+                    <span className="font-medium text-text-primary">{item.keyword}</span>
                   </div>
-                  <div className="flex items-center space-x-4">
-                    <span className="text-sm text-gray-500">{item.count}회</span>
-                    <div className="w-24 bg-gray-200 rounded-full h-2.5">
-                      <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${item.percentage}%` }}></div>
+                  <div className="flex items-center space-x-3">
+                    <span className="text-text-secondary">{item.count}회</span>
+                    <div className="w-20 bg-border rounded-full h-2">
+                      <div className="bg-primary h-2 rounded-full" style={{ width: `${item.percentage}%` }}></div>
                     </div>
-                    <span className="text-sm text-gray-500">{item.percentage}%</span>
+                    <span className="text-text-secondary w-8 text-right">{item.percentage}%</span>
                   </div>
                 </div>
               ))}
-            </div>
-            <div className="mt-6">
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={keywordData} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" />
-                  <YAxis dataKey="keyword" type="category" width={100} tick={{ fontSize: 12 }} />
-                  <Tooltip formatter={(value: number) => [`${value}회`, "검색 횟수"]} />
-                  <Bar dataKey="count" fill="#8884d8" radius={[0, 4, 4, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
 
         {/* 트래픽 소스 */}
-        <Card>
+        <Card className="bg-card text-card-foreground border-border shadow-sm">
           <CardHeader>
-            <CardTitle>트래픽 소스</CardTitle>
-            <CardDescription>방문자 유입 경로 분석</CardDescription>
+            <CardTitle className="text-text-primary">트래픽 소스</CardTitle>
+            <CardDescription className="text-text-muted">방문자 유입 경로 분석</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex justify-center">
-              <ResponsiveContainer width="100%" height={250}>
+            <div className="flex justify-center h-[250px]">
+              <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={trafficSourceData}
@@ -352,8 +348,11 @@ export default function Reports() {
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value: number) => [`${value}%`, "비율"]} />
-                  <Legend />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))' }}
+                    formatter={(value: number) => [`${value}%`, "비율"]} 
+                  />
+                  <Legend wrapperStyle={{ color: 'hsl(var(--text-secondary))'}} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -362,32 +361,34 @@ export default function Reports() {
       </div>
 
       {/* 상세 분석 탭 */}
-      <Card>
+      <Card className="bg-card text-card-foreground border-border shadow-sm">
         <CardHeader>
-          <CardTitle>상세 분석</CardTitle>
+          <CardTitle className="text-text-primary">상세 분석</CardTitle>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="time">
-            <TabsList className="mb-4">
-              <TabsTrigger value="time">시간대별 방문</TabsTrigger>
-              <TabsTrigger value="device">디바이스</TabsTrigger>
-              <TabsTrigger value="geo">지역</TabsTrigger>
-              <TabsTrigger value="performance">페이지 성능</TabsTrigger>
+            <TabsList className="mb-4 bg-transparent p-0 border-b border-border rounded-none">
+              <TabsTrigger value="time" className="data-[state=active]:text-primary data-[state=active]:border-primary border-b-2 border-transparent hover:border-border text-text-secondary px-4 pb-2 data-[state=active]:shadow-none rounded-none">시간대별 방문</TabsTrigger>
+              <TabsTrigger value="device" className="data-[state=active]:text-primary data-[state=active]:border-primary border-b-2 border-transparent hover:border-border text-text-secondary px-4 pb-2 data-[state=active]:shadow-none rounded-none">디바이스</TabsTrigger>
+              <TabsTrigger value="geo" className="data-[state=active]:text-primary data-[state=active]:border-primary border-b-2 border-transparent hover:border-border text-text-secondary px-4 pb-2 data-[state=active]:shadow-none rounded-none">지역</TabsTrigger>
+              <TabsTrigger value="performance" className="data-[state=active]:text-primary data-[state=active]:border-primary border-b-2 border-transparent hover:border-border text-text-secondary px-4 pb-2 data-[state=active]:shadow-none rounded-none">페이지 성능</TabsTrigger>
             </TabsList>
 
             <TabsContent value="time">
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={timeOfDayData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="time" />
-                    <YAxis />
-                    <Tooltip formatter={(value: number) => [`${formatNumber(value)}명`, "방문자 수"]} />
-                    <Bar dataKey="visitors" name="방문자 수" fill="#8884d8" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="time" stroke="hsl(var(--text-muted))" fontSize={12} />
+                    <YAxis stroke="hsl(var(--text-muted))" fontSize={12}/>
+                    <Tooltip 
+                        contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))' }}
+                        formatter={(value: number) => [`${formatNumber(value)}명`, "방문자 수"]} />
+                    <Bar dataKey="visitors" name="방문자 수" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-              <div className="mt-4 text-sm text-gray-500">
+              <div className="mt-4 text-sm text-text-secondary">
                 <p>
                   방문자는 주로 오후 시간대(15-21시)에 집중되어 있으며, 특히 18-21시 사이에 가장 많은 트래픽이
                   발생합니다. 이 시간대에 새로운 콘텐츠를 게시하거나 마케팅 활동을 진행하는 것이 효과적일 수 있습니다.
@@ -406,7 +407,7 @@ export default function Reports() {
                         cy="50%"
                         labelLine={false}
                         outerRadius={80}
-                        fill="#8884d8"
+                        fill="hsl(var(--primary))"
                         dataKey="value"
                         label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                       >
@@ -414,39 +415,34 @@ export default function Reports() {
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
-                      <Tooltip formatter={(value: number) => [`${value}%`, "비율"]} />
-                      <Legend />
+                      <Tooltip formatter={(value: number) => [`${value}%`, "비율"]} 
+                        contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))' }}/>
+                      <Legend wrapperStyle={{ color: 'hsl(var(--text-secondary))'}}/>
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
                 <div className="flex flex-col justify-center">
-                  <h3 className="text-lg font-medium mb-4">디바이스 사용 분석</h3>
+                  <h3 className="text-lg font-medium mb-4 text-text-primary">디바이스 사용 분석</h3>
                   <ul className="space-y-4">
                     <li className="flex items-start">
-                      <div className="mr-2 rounded-full bg-blue-100 p-1">
-                        <div className="h-2 w-2 rounded-full bg-blue-600"></div>
-                      </div>
+                      <div className="mr-3 mt-1 flex-shrink-0 h-2.5 w-2.5 rounded-full bg-primary"></div>
                       <div>
-                        <p className="font-medium">데스크톱 (45%)</p>
-                        <p className="text-sm text-gray-500">주로 업무 시간 중 사용, 평균 체류 시간 4분 30초</p>
+                        <p className="font-medium text-text-primary">데스크톱 (45%)</p>
+                        <p className="text-sm text-text-secondary">주로 업무 시간 중 사용, 평균 체류 시간 4분 30초</p>
                       </div>
                     </li>
                     <li className="flex items-start">
-                      <div className="mr-2 rounded-full bg-green-100 p-1">
-                        <div className="h-2 w-2 rounded-full bg-green-600"></div>
-                      </div>
+                      <div className="mr-3 mt-1 flex-shrink-0 h-2.5 w-2.5 rounded-full bg-accent"></div>
                       <div>
-                        <p className="font-medium">모바일 (40%)</p>
-                        <p className="text-sm text-gray-500">주로 저녁 시간대 사용, 평균 체류 시간 2분 45초</p>
+                        <p className="font-medium text-text-primary">모바일 (40%)</p>
+                        <p className="text-sm text-text-secondary">주로 저녁 시간대 사용, 평균 체류 시간 2분 45초</p>
                       </div>
                     </li>
                     <li className="flex items-start">
-                      <div className="mr-2 rounded-full bg-yellow-100 p-1">
-                        <div className="h-2 w-2 rounded-full bg-yellow-600"></div>
-                      </div>
+                      <div className="mr-3 mt-1 flex-shrink-0 h-2.5 w-2.5 rounded-full" style={{backgroundColor: COLORS[2]}}></div>
                       <div>
-                        <p className="font-medium">태블릿 (15%)</p>
-                        <p className="text-sm text-gray-500">주로 주말에 사용, 평균 체류 시간 3분 15초</p>
+                        <p className="font-medium text-text-primary">태블릿 (15%)</p>
+                        <p className="text-sm text-text-secondary">주로 주말에 사용, 평균 체류 시간 3분 15초</p>
                       </div>
                     </li>
                   </ul>
@@ -457,35 +453,27 @@ export default function Reports() {
             <TabsContent value="geo">
               <div className="space-y-6">
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm text-left text-gray-500">
-                    <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+                  <table className="w-full text-sm text-left text-text-secondary">
+                    <thead className="text-xs text-text-secondary uppercase bg-hover-bg-light">
                       <tr>
-                        <th scope="col" className="px-6 py-3">
-                          국가
-                        </th>
-                        <th scope="col" className="px-6 py-3">
-                          방문자 수
-                        </th>
-                        <th scope="col" className="px-6 py-3">
-                          비율
-                        </th>
-                        <th scope="col" className="px-6 py-3">
-                          평균 체류 시간
-                        </th>
+                        <th scope="col" className="px-6 py-3 font-medium">국가</th>
+                        <th scope="col" className="px-6 py-3 font-medium">방문자 수</th>
+                        <th scope="col" className="px-6 py-3 font-medium">비율</th>
+                        <th scope="col" className="px-6 py-3 font-medium">평균 체류 시간</th>
                       </tr>
                     </thead>
                     <tbody>
                       {countryData.map((item, index) => (
-                        <tr key={index} className="bg-white border-b">
-                          <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                        <tr key={index} className="bg-card border-b border-border hover:bg-hover-bg-light">
+                          <td className="px-6 py-4 font-medium text-text-primary whitespace-nowrap">
                             <div className="flex items-center">
-                              <Globe className="mr-2 h-4 w-4 text-gray-400" />
+                              <Globe className="mr-2 h-4 w-4 text-text-muted" />
                               {item.country}
                             </div>
                           </td>
-                          <td className="px-6 py-4">{formatNumber(item.visitors)}</td>
-                          <td className="px-6 py-4">{item.percentage}%</td>
-                          <td className="px-6 py-4">
+                          <td className="px-6 py-4 text-text-primary">{formatNumber(item.visitors)}</td>
+                          <td className="px-6 py-4 text-text-primary">{item.percentage}%</td>
+                          <td className="px-6 py-4 text-text-primary">
                             {index === 0
                               ? "3분 50초"
                               : index === 1
@@ -501,62 +489,38 @@ export default function Reports() {
                     </tbody>
                   </table>
                 </div>
-
-                <div className="h-60">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={countryData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="country" />
-                      <YAxis />
-                      <Tooltip formatter={(value: number) => [`${formatNumber(value)}명`, "방문자 수"]} />
-                      <Bar dataKey="visitors" name="방문자 수" fill="#8884d8" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
               </div>
             </TabsContent>
 
             <TabsContent value="performance">
               <div className="space-y-6">
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm text-left text-gray-500">
-                    <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+                  <table className="w-full text-sm text-left text-text-secondary">
+                    <thead className="text-xs text-text-secondary uppercase bg-hover-bg-light">
                       <tr>
-                        <th scope="col" className="px-6 py-3">
-                          페이지
-                        </th>
-                        <th scope="col" className="px-6 py-3">
-                          로딩 시간
-                        </th>
-                        <th scope="col" className="px-6 py-3">
-                          이탈률
-                        </th>
-                        <th scope="col" className="px-6 py-3">
-                          성능 점수
-                        </th>
+                        <th scope="col" className="px-6 py-3 font-medium">페이지</th>
+                        <th scope="col" className="px-6 py-3 font-medium">로딩 시간</th>
+                        <th scope="col" className="px-6 py-3 font-medium">이탈률</th>
+                        <th scope="col" className="px-6 py-3 font-medium">성능 점수</th>
                       </tr>
                     </thead>
                     <tbody>
                       {performanceData.map((item, index) => (
-                        <tr key={index} className="bg-white border-b">
-                          <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{item.page}</td>
-                          <td className="px-6 py-4">{item.loadTime}초</td>
-                          <td className="px-6 py-4">{item.bounceRate}%</td>
+                        <tr key={index} className="bg-card border-b border-border hover:bg-hover-bg-light">
+                          <td className="px-6 py-4 font-medium text-text-primary whitespace-nowrap">{item.page}</td>
+                          <td className="px-6 py-4 text-text-primary">{item.loadTime}초</td>
+                          <td className="px-6 py-4 text-text-primary">{item.bounceRate}%</td>
                           <td className="px-6 py-4">
                             <div className="flex items-center">
-                              <div className="w-full bg-gray-200 rounded-full h-2.5">
+                              <div className="w-full bg-border rounded-full h-2">
                                 <div
-                                  className={`h-2.5 rounded-full ${
-                                    item.loadTime < 1.5
-                                      ? "bg-green-600"
-                                      : item.loadTime < 1.8
-                                        ? "bg-yellow-400"
-                                        : "bg-red-500"
-                                  }`}
+                                  className={cn("h-2 rounded-full", 
+                                    item.loadTime < 1.5 ? "bg-green-500" : item.loadTime < 1.8 ? "bg-yellow-400" : "bg-red-500"
+                                  )}
                                   style={{ width: `${Math.max(0, 100 - item.loadTime * 30)}%` }}
                                 ></div>
                               </div>
-                              <span className="ml-2 text-sm">
+                              <span className="ml-2 text-sm text-text-primary">
                                 {Math.max(0, 100 - Math.round(item.loadTime * 30))}/100
                               </span>
                             </div>
@@ -566,10 +530,9 @@ export default function Reports() {
                     </tbody>
                   </table>
                 </div>
-
-                <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-                  <h4 className="text-sm font-medium text-yellow-800 mb-2">성능 개선 제안</h4>
-                  <p className="text-sm text-yellow-700">
+                <div className="p-4 bg-yellow-500/10 rounded-lg border border-yellow-500/20 text-yellow-700 dark:text-yellow-300">
+                  <h4 className="text-sm font-medium text-yellow-800 dark:text-yellow-200 mb-2">성능 개선 제안</h4>
+                  <p className="text-sm">
                     제품 페이지와 결제 페이지의 로딩 시간이 다른 페이지보다 길게 나타납니다. 이미지 최적화와 불필요한
                     스크립트 제거를 통해 페이지 로딩 속도를 개선할 수 있습니다.
                   </p>
@@ -581,16 +544,16 @@ export default function Reports() {
       </Card>
 
       {/* 요약 및 제안 */}
-      <Card>
+      <Card className="bg-card text-card-foreground border-border shadow-sm">
         <CardHeader>
-          <CardTitle>분석 요약 및 제안</CardTitle>
+          <CardTitle className="text-text-primary">분석 요약 및 제안</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <h3 className="text-md font-medium text-blue-800 mb-2">주요 발견 사항</h3>
-              <ul className="list-disc pl-5 text-sm text-blue-700 space-y-1">
-                <li>방문자 수가 지난 기간 대비 {visitorChange.toFixed(1)}% 증가했습니다.</li>
+            <div className="p-4 bg-primary/10 rounded-lg border border-primary/20 text-primary">
+              <h3 className="text-md font-semibold mb-2">주요 발견 사항</h3>
+              <ul className="list-disc pl-5 text-sm space-y-1">
+                <li>방문자 수가 지난 기간 대비 {visitorChange > 0 ? '증가했습니다' : '감소했습니다'} ({visitorChange.toFixed(1)}%).</li>
                 <li>가장 많은 방문이 발생하는 시간대는 18-21시입니다.</li>
                 <li>
                   "디지털 마케팅"과 "콘텐츠 전략"이 가장 많이 검색된 키워드로, 이 주제에 대한 콘텐츠 강화가 필요합니다.
@@ -598,10 +561,9 @@ export default function Reports() {
                 <li>모바일 사용자의 비율이 전월 대비 5% 증가했습니다.</li>
               </ul>
             </div>
-
-            <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-              <h3 className="text-md font-medium text-green-800 mb-2">개선 제안</h3>
-              <ul className="list-disc pl-5 text-sm text-green-700 space-y-1">
+            <div className="p-4 bg-green-500/10 rounded-lg border border-green-500/20 text-green-700 dark:text-green-300">
+              <h3 className="text-md font-semibold text-green-800 dark:text-green-200 mb-2">개선 제안</h3>
+              <ul className="list-disc pl-5 text-sm space-y-1">
                 <li>
                   모바일 사용자 경험 최적화: 모바일 사용자가 증가하고 있으므로, 모바일 인터페이스 개선이 필요합니다.
                 </li>

@@ -5,11 +5,19 @@ import { EditorProvider } from '../../contexts/EditorContext';
 import EditorHeader from './EditorHeader';
 import EditorToolbar from './EditorToolbar';
 import EditorContent from './EditorContent';
+import { cn } from '@/lib/utils';
+import { useSidebar } from '../../contexts/SidebarContext';
 
 export default function RichTextEditor() {
+  const { isMobileView } = useSidebar();
   return (
     <EditorProvider>
-      <div className="flex flex-col h-full bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+      <div 
+        className={cn(
+          "flex flex-col h-full bg-panel-background rounded-xl shadow-panel",
+          isMobileView ? "p-0" : "",
+        )}
+      >
         <EditorHeader />
         <EditorToolbar />
         <EditorContent />

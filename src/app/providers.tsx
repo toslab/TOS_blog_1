@@ -40,20 +40,26 @@ function ThemeWatcher() {
   return null
 }
 
-export const AppContext = createContext<{ previousPathname?: string }>({})
+export const AppContext = createContext<{ previousPathname?: string | null }>({})
 
 export function Providers({ children }: { children: React.ReactNode }) {
   let pathname = usePathname()
   let previousPathname = usePrevious(pathname)
   const [mounted, setMounted] = useState(false)
   
-  // 로그인 페이지 감지
-  const isLoginPage = pathname === '/login'
+  // pathname이 null일 수 있는 경우를 고려
+  const isLoginPage = typeof pathname === 'string' && pathname === '/login'
 
-  // 클라이언트에서만 ThemeWatcher 렌더링하기 위함
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // pathname이 null이면 로딩 상태나 빈 화면을 표시할 수 있습니다.
+  // 여기서는 간단히 children만 렌더링하도록 두지만, 실제 프로덕션에서는 더 나은 처리가 필요할 수 있습니다.
+  if (pathname === null) {
+    // 또는 <LoadingSpinner /> 같은 컴포넌트 반환
+    return <SessionProvider>{children}</SessionProvider>; 
+  }
 
   return (
     <SessionProvider>
@@ -61,9 +67,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <ThemeProvider 
           attribute="class" 
           disableTransitionOnChange
-          forcedTheme={isLoginPage ? "light" : undefined} // 로그인 페이지일 때만 라이트 테마 강제 적용
+          forcedTheme={isLoginPage ? "light" : undefined}
         >
-          {mounted && !isLoginPage && <ThemeWatcher />} {/* 마운트 된 후, 로그인 페이지가 아닐 때만 ThemeWatcher 렌더링*/}
+          {mounted && !isLoginPage && <ThemeWatcher />} 
           {children}
         </ThemeProvider>
       </AppContext.Provider>

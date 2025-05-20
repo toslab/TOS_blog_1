@@ -1,118 +1,182 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode, Dispatch, SetStateAction } from 'react';
-import { Calendar, FileText, BarChart3, FolderKanban } from 'lucide-react';
-import { NavigationItem } from '../types';
+import React, { createContext, useContext, useState, useEffect, ReactNode, Dispatch, SetStateAction } from 'react';
+import { LucideIcon, Home, Briefcase, Settings, Users, FileText, Folder, LogOut, BarChart3, Calendar } from 'lucide-react';
+import { SubMenuItem } from '../components/common/ListItem';
 
-const mainNavigationData: NavigationItem[] = [
-  { name: 'Calendar', href: '#', icon: Calendar },
-  { name: 'Documents', href: '#', icon: FileText, hasPanel: true }, 
-  { name: 'Projects', href: '#', icon: FolderKanban, hasPanel: true }, 
-  { name: 'Reports', href: '#', icon: BarChart3 },
-  // Settings는 별도 버튼으로 처리되므로 여기서는 제외 가능, 또는 추가 타입 정의 필요
+export interface IconNavItem {
+  name: string;
+  icon: LucideIcon;
+  panelId: string;
+}
+
+interface NavigationData {
+  iconNavItems: IconNavItem[];
+  mainMenuItems: Record<string, { title: string; items: SubMenuItem[] }>;
+}
+
+const defaultNavigationData: NavigationData = {
+  iconNavItems: [
+    { name: '홈', icon: Home, panelId: 'home' },
+    { name: '캘린더', icon: Calendar, panelId: 'calendar' },
+    { name: '문서', icon: FileText, panelId: 'documents' },
+    { name: '프로젝트', icon: Briefcase, panelId: 'projects' }, 
+    { name: '보고서', icon: BarChart3, panelId: 'reports' },
+  ],
+  mainMenuItems: {
+    home: {
+      title: '홈 대시보드',
+      items: [
+        { id: 'home-overview', name: '개요', href: '/', type: 'link', icon: FileText, isActive: true },
+        { id: 'home-activity', name: '최근 활동', href: '#', type: 'link', icon: Folder },
+      ],
+    },
+    calendar: {
+        title: '캘린더 관리',
+        items: [
+            { id: 'cal-month', name: '월간 보기', href: '#', type: 'link', icon: Calendar },
+            { id: 'cal-week', name: '주간 보기', href: '#', type: 'link', icon: Calendar },
+        ]
+    },
+    documents: {
+      title: '문서 관리',
+      items: [
+        { id: 'doc-all', name: '모든 문서', href: '#', type: 'link', icon: FileText, badgeCount: 12 },
+        { id: 'doc-my', name: '내 문서', href: '#', type: 'link', icon: FileText },
+        { id: 'doc-shared', name: '공유된 문서', href: '#', type: 'link', icon: Users },
+        { id: 'doc-separator', name: 'doc-separator', type: 'separator' },
+        { id: 'doc-action-create', name: '새 문서 만들기', onClick: () => console.log('새 문서'), type: 'action' },
+      ],
+    },
+    projects: {
+      title: '프로젝트 보드',
+      items: [
+        { id: 'proj-all', name: '모든 프로젝트', href: '#', type: 'link', icon: Briefcase },
+        { id: 'proj-active', name: '진행중인 프로젝트', href: '#', type: 'link', icon: Folder, badgeCount: 5 },
+      ],
+    },
+    reports: {
+        title: '보고서 보기',
+        items: [
+            { id: 'report-sales', name: '매출 보고서', href: '#', type: 'link', icon: BarChart3 },
+            { id: 'report-ux', name: '사용자 경험 분석', href: '#', type: 'link', icon: BarChart3 },
+        ]
+    },
+    settings: {
+        title: '애플리케이션 설정',
+        items: [
+            { id: 'settings-profile', name: '프로필', href: '#', type: 'link', icon: Users },
+            { id: 'settings-app', name: '앱 설정', href: '#', type: 'link', icon: Settings },
+        ]
+    }
+  },
+};
+
+export const bottomIconNavItemsData: IconNavItem[] = [
+    { name: '설정', icon: Settings, panelId: 'settings' },
+    { name: '로그아웃', icon: LogOut, panelId: 'logout_action' }, 
 ];
 
 interface SidebarContextType {
-  // 사이드바 상태
-  sidebarOpen: boolean;
-  setSidebarOpen: Dispatch<SetStateAction<boolean>>;
-  collapsed: boolean;
-  setCollapsed: Dispatch<SetStateAction<boolean>>;
-  toggleSidebarCollapse: () => void;
-  
-  // 네비게이션 상태
-  activeNavItem: string;
-  setActiveNavItem: Dispatch<SetStateAction<string>>;
-  navigationItems: NavigationItem[];
-  
-  // 패널 상태
+  activeIconMenu: string;
+  setActiveIconMenu: (panelId: string) => void;
+  isMainMenuOpenOnMobile: boolean;
+  toggleMainMenuOnMobile: () => void;
+  openMainMenuOnMobile: () => void;
+  closeMainMenuOnMobile: () => void;
+  iconNavItems: IconNavItem[];
+  bottomIconNavItems: IconNavItem[];
+  getMainMenuItems: (panelId: string) => { title: string; items: SubMenuItem[] };
+  activeSubNavItem?: string;
+  setActiveSubNavItem: (itemId: string) => void;
   projectPanelOpen: boolean;
   setProjectPanelOpen: Dispatch<SetStateAction<boolean>>;
   documentPanelOpen: boolean;
   setDocumentPanelOpen: Dispatch<SetStateAction<boolean>>;
-  
-  // 네비게이션 핸들러
-  handleNavItemClick: (item: NavigationItem) => void;
-  
-  // 모바일 관련 상태
+  handlePanelToggle: (panelName: 'documents' | 'projects') => void;
   isMobileView: boolean;
 }
 
 const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
 
 export function SidebarProvider({ children }: { children: ReactNode }) {
-  // 기본 상태들
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
-  const [activeNavItem, setActiveNavItem] = useState('Calendar');
-  
-  // 패널 상태
+  const [activeIconMenu, setActiveIconMenuInternal] = useState<string>(defaultNavigationData.iconNavItems[0]?.panelId || 'home');
+  const [isMainMenuOpenOnMobile, setIsMainMenuOpenOnMobile] = useState(false);
+  const [activeSubNavItem, setActiveSubNavItem] = useState<string | undefined>(
+    defaultNavigationData.mainMenuItems[activeIconMenu]?.items.find(item => item.type === 'link' && item.href)?.id
+  );
+
   const [projectPanelOpen, setProjectPanelOpen] = useState(false);
   const [documentPanelOpen, setDocumentPanelOpen] = useState(false);
   
-  // 모바일 상태 감지
   const [isMobileView, setIsMobileView] = useState(false);
   
   useEffect(() => {
     const checkMobileView = () => {
-      const isMobile = window.innerWidth < 1024;
-      setIsMobileView(isMobile);
-      
-      // 모바일 환경에서는 사이드바를 기본적으로 접힌 상태로 설정
-      if (isMobile && !collapsed) {
-        setCollapsed(true);
+      const mobile = window.innerWidth < 768;
+      setIsMobileView(mobile);
+      if (!mobile) {
+        setIsMainMenuOpenOnMobile(false);
       }
     };
-    
     checkMobileView();
     window.addEventListener('resize', checkMobileView);
     return () => window.removeEventListener('resize', checkMobileView);
-  }, [collapsed]);
+  }, []);
 
-  const toggleSidebarCollapse = () => setCollapsed(!collapsed);
-
-  // 네비게이션 아이템 클릭 핸들러
-  const handleNavItemClick = (item: NavigationItem) => {
-    setActiveNavItem(item.name);
-
-    // 패널 토글 로직
-    if (item.name === 'Documents') {
-      // 같은 항목 재클릭 시 패널 닫기, 아니면 열기
-      const newDocPanelOpen = item.name === activeNavItem ? !documentPanelOpen : true;
-      setDocumentPanelOpen(newDocPanelOpen);
-      setProjectPanelOpen(false); // 다른 패널 닫기
-    } else if (item.name === 'Projects') {
-      const newProjPanelOpen = item.name === activeNavItem ? !projectPanelOpen : true;
-      setProjectPanelOpen(newProjPanelOpen);
-      setDocumentPanelOpen(false); // 다른 패널 닫기
-    } else {
-      // 패널이 없는 항목 클릭 시 모든 패널 닫기
-      setDocumentPanelOpen(false);
-      setProjectPanelOpen(false);
-    }
-    
-    // 모바일 환경에서는 네비게이션 클릭 후 사이드바 닫기
+  const setActiveIconMenu = (panelId: string) => {
+    setActiveIconMenuInternal(panelId);
+    const firstItem = defaultNavigationData.mainMenuItems[panelId]?.items.find(item => item.type === 'link' && item.href);
+    setActiveSubNavItem(firstItem?.id);
     if (isMobileView) {
-      setSidebarOpen(false);
+      setIsMainMenuOpenOnMobile(true);
+    }
+  };
+
+  const toggleMainMenuOnMobile = () => setIsMainMenuOpenOnMobile(prev => !prev);
+  const openMainMenuOnMobile = () => setIsMainMenuOpenOnMobile(true);
+  const closeMainMenuOnMobile = () => setIsMainMenuOpenOnMobile(false);
+
+  const getMainMenuItems = (panelId: string): { title: string; items: SubMenuItem[] } => {
+    const menuData = defaultNavigationData.mainMenuItems[panelId];
+    if (!menuData) return { title: '메뉴 없음', items: [] };
+    
+    const itemsWithActiveState = menuData.items.map(item => ({
+      ...item,
+      isActive: item.id === activeSubNavItem
+    }));
+    return { ...menuData, items: itemsWithActiveState };
+  };
+
+  const handlePanelToggle = (panelName: 'documents' | 'projects') => {
+    if (panelName === 'documents') {
+      setDocumentPanelOpen(prev => !prev);
+      setProjectPanelOpen(false);
+    } else if (panelName === 'projects') {
+      setProjectPanelOpen(prev => !prev);
+      setDocumentPanelOpen(false);
     }
   };
 
   return (
     <SidebarContext.Provider 
       value={{
-        sidebarOpen,
-        setSidebarOpen,
-        collapsed,
-        setCollapsed,
-        toggleSidebarCollapse,
-        activeNavItem,
-        setActiveNavItem,
-        navigationItems: mainNavigationData,
-        handleNavItemClick,
+        activeIconMenu,
+        setActiveIconMenu,
+        isMainMenuOpenOnMobile,
+        toggleMainMenuOnMobile,
+        openMainMenuOnMobile,
+        closeMainMenuOnMobile,
+        iconNavItems: defaultNavigationData.iconNavItems,
+        bottomIconNavItems: bottomIconNavItemsData,
+        getMainMenuItems,
+        activeSubNavItem,
+        setActiveSubNavItem,
         projectPanelOpen,
         setProjectPanelOpen,
         documentPanelOpen,
         setDocumentPanelOpen,
+        handlePanelToggle,
         isMobileView,
       }}
     >

@@ -1,6 +1,7 @@
 'use client';
 
-import React, { ButtonHTMLAttributes, ReactNode } from 'react';
+import React, { ButtonHTMLAttributes, ReactNode, AnchorHTMLAttributes } from 'react';
+import Link from 'next/link';
 import { VariantProps, cva } from 'class-variance-authority';
 import { cn } from '@/utils/cn';
 
@@ -33,24 +34,60 @@ const buttonVariants = cva(
 
 // 버튼 컴포넌트 props 인터페이스
 export interface ButtonProps
-  extends ButtonHTMLAttributes<HTMLButtonElement>,
+  extends Omit<
+    ButtonHTMLAttributes<HTMLButtonElement>,
+    'href' | 'className' | 'children' | 'type' // 'form', 'formAction' 등은 이미 ButtonHTMLAttributes에 포함
+  >,
     VariantProps<typeof buttonVariants> {
   children: ReactNode;
   className?: string;
+  href?: string;
+  type?: 'button' | 'submit' | 'reset';
 }
 
 // 버튼 컴포넌트
-export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, ...props }, ref) => {
+export const Button = React.forwardRef<
+  HTMLButtonElement | HTMLAnchorElement,
+  ButtonProps
+>(({ className, variant, size, href, children, type: buttonType, ...rest }, ref) => {
+  const classes = cn(buttonVariants({ variant, size, className }));
+
+  if (href) {
+    // rest에서 button 전용 속성들 제거
+    const {
+      form,
+      formAction,
+      formEncType,
+      formMethod,
+      formNoValidate,
+      formTarget,
+      value,
+      ...anchorProps // Link 및 <a> 태그에 전달될 나머지 props
+    } = rest;
+
     return (
-      <button
-        className={cn(buttonVariants({ variant, size, className }))}
-        ref={ref}
-        {...props}
-      />
+      <Link
+        href={href}
+        ref={ref as React.Ref<HTMLAnchorElement>}
+        className={classes}
+        {...(anchorProps as Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href' | 'className' | 'children'>)}
+      >
+        {children}
+      </Link>
     );
   }
-);
+
+  return (
+    <button
+      type={buttonType || 'button'}
+      className={classes}
+      ref={ref as React.Ref<HTMLButtonElement>}
+      {...(rest as ButtonHTMLAttributes<HTMLButtonElement>)} // 여기서는 모든 rest가 유효
+    >
+      {children}
+    </button>
+  );
+});
 Button.displayName = 'Button';
 
 // 모바일 터치 영역을 최적화하기 위한 컴포넌트

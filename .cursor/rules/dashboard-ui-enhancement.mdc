@@ -1,5 +1,497 @@
 ---
-description:
-globs:
+description: 
+globs: src/app/dashboard/styles/**/*.css,tailwind.config.js,src/app/dashboard/components/layout/**/*.tsx,src/app/dashboard/components/common/**/*.tsx,src/app/dashboard/contexts/SidebarContext.tsx
 alwaysApply: false
 ---
+name: Dashboard Refactoring Guide - Detailed v2
+globs:
+  - "src/app/dashboard/styles/**/*.css"
+  - "tailwind.config.js"
+  - "src/app/dashboard/components/layout/**/*.tsx"
+  - "src/app/dashboard/components/common/**/*.tsx"
+  - "src/app/dashboard/contexts/SidebarContext.tsx"
+  - "src/app/dashboard/components/panels/**/*.tsx"
+  - "src/app/dashboard/components/dashboard.tsx" # 메인 대시보드 컴포넌트 포함
+  # 필요에 따라 다른 관련 경로 추가
+alwaysApply: false
+description: "새로운 대시보드 디자인 시스템(듀얼 패널, 아이콘 바 등)을 적용하고, 코드 품질 및 유지보수성을 향상시키기 위한 상세 리팩토링 규칙 세트입니다. (기존 dashboard_ux_ui_rules_mdc 규칙들을 통합 및 확장)"
+---
+
+version: 2.0 # 규칙 버전 업데이트
+rules:
+  - id: NEW-DS-CSS-VARS-001
+    title: "1.1: 새로운 디자인 시스템 CSS 변수 정의 및 Tailwind 연동"
+    description: |
+      새로운 대시보드 디자인에 맞는 핵심 색상, 간격 등의 CSS 변수를 `dashboard.css` (또는 전역 CSS)에 정의하고,
+      이를 `tailwind.config.js`에서 Tailwind 유틸리티 클래스로 사용할 수 있도록 연동합니다.
+      이를 통해 디자인 시스템의 일관성을 확보하고 유지보수를 용이하게 합니다.
+
+      **주요 변수 예시 (가이드 문서 참조):**
+      `--page-background`, `--panel-background`, `--sidebar-icon-bar-background`, `--text-primary`,
+      `--active-item-background`, `--border-color`, 등.
+
+      **Tailwind 설정 예시 (가이드 문서 참조):**
+      `colors: { 'page-background': 'hsl(var(--page-background))', ... }`,
+      `spacing: { 'icon-bar': '5rem', 'menu-panel': '18rem', ... }`
+    filesToScan:
+      - "src/app/dashboard/styles/dashboard.css" # 또는 global.css
+      - "tailwind.config.js"
+    patterns:
+      - regex: ':root\s*{[^{}]*--page-background\s*:\s*hsl\('
+        message: |
+          [NEW-DS-CSS-VARS-001] `dashboard.css`에 새로운 CSS 변수 정의가 확인됩니다.
+          이 변수들이 `tailwind.config.js`에도 올바르게 연동되어 있는지,
+          그리고 가이드 문서에 제시된 모든 필수 변수들이 포함되어 있는지 확인해주세요.
+        level: "info"
+      - regex: '(colors|spacing):\s*{[^{}]*\'page-background\'\s*:\s*\'hsl\(var\(--page-background\)\)\''
+        message: |
+          [NEW-DS-CSS-VARS-001] `tailwind.config.js`에 CSS 변수 연동이 확인됩니다.
+          `dashboard.css`에 정의된 모든 주요 변수들이 `colors`, `spacing`, `borderRadius`, `boxShadow` 등에
+          적절히 매핑되어 있는지 확인하고, 새로운 디자인 시스템 값을 반영하고 있는지 검토해주세요.
+        level: "info"
+      - regex: 'className={`[^`]*(bg-\[hsl\(|text-\[hsl\()]' # Tailwind 클래스 내 직접 HSL 사용 감지
+        message: |
+          [NEW-DS-CSS-VARS-001] Tailwind 클래스 내에서 `bg-[hsl(var(--...))]` 또는 `text-[hsl(var(--...))]` 형태로 CSS 변수를 직접 사용하고 있습니다.
+          `tailwind.config.js`에 해당 변수를 사용하는 색상 유틸리티(예: `bg-panel-background`)를 정의하고,
+          그 유틸리티 클래스를 사용하는 것을 강력히 권장합니다. 이렇게 하면 코드 가독성과 유지보수성이 향상됩니다.
+        suggestion: |
+          // 1. dashboard.css (또는 global.css)에 CSS 변수 정의:
+          // :root { --panel-background: hsl(0, 0%, 100%); }
+
+          // 2. tailwind.config.js 에 색상 확장:
+          // colors: { 'panel-background': 'hsl(var(--panel-background))' }
+
+          // 3. 컴포넌트에서 사용:
+          // className="bg-[hsl(var(--panel-background))]" -> className="bg-panel-background"
+        level: "warning"
+    fix: |
+      1.  `src/app/dashboard/styles/dashboard.css` (또는 전역 CSS 파일)을 열어 가이드 문서의 1.1 섹션에 제시된 예시와 같이 새로운 디자인 시스템에 필요한 CSS 변수들(`--page-background`, `--panel-background`, `--text-primary` 등)을 정의하거나 업데이트합니다.
+      2.  `tailwind.config.js` 파일을 열어 `theme.extend` 객체 내의 `colors`, `spacing`, `borderRadius`, `boxShadow` 등을 가이드 문서의 1.2 섹션 예시처럼 수정합니다. 정의한 CSS 변수들을 참조하여 Tailwind 유틸리티 클래스를 생성하도록 설정합니다.
+      3.  프로젝트 전체에서 `bg-[hsl(var(...))]` 또는 `text-[hsl(var(...))]`와 같이 CSS 변수를 직접 사용하는 Tailwind 클래스가 있다면, `tailwind.config.js`에 정의된 해당 유틸리티 클래스(예: `bg-panel-background`)로 교체합니다.
+
+  - id: NEW-DS-LAYOUT-001
+    title: "2.1: DashboardLayout을 새로운 3단 레이아웃으로 개편"
+    description: |
+      기존 `DashboardLayout.tsx`를 새로운 디자인 시스템에 맞춰 아이콘 전용 사이드바, 주 메뉴 패널, 메인 콘텐츠 영역으로 구성된 3단 레이아웃으로 수정합니다.
+      Flexbox 또는 CSS Grid를 사용하여 구조를 잡고, 각 영역을 담당할 새로운 컴포넌트(`IconSidebar`, `MainMenuPanel`)를 호출하도록 변경합니다.
+    filesToScan:
+      - "src/app/dashboard/components/layout/DashboardLayout.tsx"
+    patterns:
+      - regex: '(<IconSidebar[^/>]*/>|<MainMenuPanel[^/>]*/>)' # 새로운 레이아웃 컴포넌트 사용 여부
+        message: |
+          [NEW-DS-LAYOUT-001] `DashboardLayout.tsx`에서 새로운 레이아웃 컴포넌트(`IconSidebar`, `MainMenuPanel`) 사용이 감지되었습니다.
+          전체 구조가 `flex h-screen bg-page-background`를 기반으로 올바르게 배치되었는지,
+          그리고 `activeIconMenu` 상태가 하위 컴포넌트로 적절히 전달되고 있는지 확인해주세요.
+          메인 콘텐츠 영역은 `flex-1 flex flex-col overflow-y-auto`와 같은 클래스로 유연하게 확장되어야 합니다.
+        level: "info"
+      - regex: '(!isMobileView\s*\|\|\s*\(isMobileView\s*&&\s*isMainMenuPanelOpen\)\s*\)\s*\?\s*<MainMenuPanel' # 모바일 반응형 주석 확인
+        message: |
+          [NEW-DS-LAYOUT-001] `MainMenuPanel`의 모바일 반응형 표시 로직에 대한 주석이 있습니다.
+          `isMobileView` 상태와 `isMainMenuPanelOpen` 상태를 실제로 구현하고,
+          모바일에서 아이콘 바 클릭 시 주 메뉴 패널이 적절히 토글(예: 슬라이드 인/아웃)되는지 확인해야 합니다.
+          이를 위해 `useMediaQuery` 훅이나 유사한 반응형 훅을 사용하여 `isMobileView`를 동적으로 설정하고,
+          `isMainMenuPanelOpen` 상태를 `IconSidebar`와의 상호작용을 통해 업데이트해야 합니다.
+        level: "warning"
+    suggestion: |
+      // src/app/dashboard/components/layout/DashboardLayout.tsx
+      // 가이드 문서 2.1 섹션의 DashboardLayout.tsx 예시 코드를 참조하여 구조를 변경합니다.
+      // 주요 변경 사항:
+      // - 최상위 div: className="flex h-screen bg-page-background text-text-primary"
+      // - IconSidebar, MainMenuPanel, main (콘텐츠 영역) 순으로 배치
+      // - activeIconMenu 상태 관리 및 props 전달
+      // - 메인 콘텐츠 영역: className="flex-1 flex flex-col overflow-y-auto"
+      // - 메인 콘텐츠 내부 패딩: className="p-panel-padding-x lg:p-panel-padding-y flex-1"
+    fix: |
+      1.  `src/app/dashboard/components/layout/DashboardLayout.tsx` 파일을 엽니다.
+      2.  가이드 문서 2.1 섹션의 예시 코드를 참조하여, 기존 레이아웃 구조를 새로운 3단 레이아웃( `<IconSidebar />`, `<MainMenuPanel />`, `<main>...</main>`)으로 변경합니다.
+      3.  `activeIconMenu` 상태를 `useState`로 정의하고, `IconSidebar`와 `MainMenuPanel`에 props로 전달합니다.
+      4.  메인 콘텐츠 영역(`<main>`)과 그 내부 div에 적절한 Tailwind 클래스(`flex-1`, `overflow-y-auto`, `p-panel-padding-x`, `lg:p-panel-padding-y`)를 적용합니다.
+      5.  모바일 뷰를 위한 `isMobileView` 상태와 `isMainMenuPanelOpen` 상태 로직을 구현하거나 TODO 주석을 남깁니다. (예: `const isMobileView = useMediaQuery('(max-width: 768px)');`)
+
+  - id: NEW-DS-ICONSIDEBAR-001
+    title: "2.2: IconSidebar 컴포넌트 생성 및 스타일 적용"
+    description: |
+      아이콘 전용 사이드바 (`IconSidebar.tsx`)를 생성하고, 새로운 디자인 가이드라인에 따라 스타일을 적용합니다.
+      고정 너비, 배경색, 아이콘 버튼 스타일, 활성 상태 강조, 로고 표시 등을 구현합니다.
+      각 아이콘 버튼은 `activeIconMenu` 상태를 업데이트해야 합니다.
+    filesToScan:
+      - "src/app/dashboard/components/layout/IconSidebar.tsx"
+    patterns:
+      - regex: 'className="w-icon-bar\s*bg-sidebar-icon-bar' # IconSidebar 기본 스타일
+        message: |
+          [NEW-DS-ICONSIDEBAR-001] `IconSidebar.tsx`의 기본 스타일이 확인됩니다.
+          내부 아이콘 버튼들이 `p-3 rounded-lg w-full` 등의 스타일을 갖고,
+          활성 상태(`activeIconMenu === item.panelId`)일 때 `bg-sidebar-icon-active-bg shadow-icon-active` 클래스와
+          아이콘 색상(`text-active-item-background`), `strokeWidth` 변경이 적용되는지 확인해주세요.
+          모든 아이콘 버튼에는 `aria-label`이 필수입니다.
+        level: "info"
+      - regex: '<button[^>]*onClick={()\s*=>\s*setActiveIconMenu\(item\.panelId\)}[^>]*aria-label={item\.name}[^>]*>' # 아이콘 버튼 인터랙션 및 접근성
+        message: |
+          [NEW-DS-ICONSIDEBAR-001] 아이콘 버튼의 `onClick` 핸들러와 `aria-label`이 올바르게 설정된 것으로 보입니다.
+          `aria-current` 속성도 활성 상태에 따라 적절히 설정되었는지 확인해주세요.
+          아이콘(`item.icon`)의 `className`과 `strokeWidth`가 활성 상태에 따라 동적으로 변경되는지 검토합니다.
+        suggestion: |
+          // IconSidebar.tsx 내 아이콘 버튼 예시:
+          // <button
+          //   key={item.name}
+          //   type="button"
+          //   onClick={() => setActiveIconMenu(item.panelId)}
+          //   aria-label={item.name}
+          //   aria-current={activeIconMenu === item.panelId ? 'page' : undefined}
+          //   className={cn(
+          //     'p-3 rounded-lg w-full flex justify-center items-center transition-all duration-200 ease-in-out group',
+          //     activeIconMenu === item.panelId ? 'bg-sidebar-icon-active-bg shadow-icon-active' : 'hover:bg-hover-bg-light'
+          //   )}
+          // >
+          //   <item.icon
+          //     className={cn('h-6 w-6', activeIconMenu === item.panelId ? 'text-active-item-background' : 'text-text-secondary group-hover:text-text-primary')}
+          //     strokeWidth={activeIconMenu === item.panelId ? 2.5 : 2}
+          //   />
+          // </button>
+        level: "info"
+    fix: |
+      1.  `src/app/dashboard/components/layout/IconSidebar.tsx` 파일이 없다면 가이드 문서 2.2 섹션의 예시 코드를 참고하여 새로 생성합니다.
+      2.  `aside` 태그에 `w-icon-bar bg-sidebar-icon-bar flex-shrink-0 flex flex-col items-center py-5 shadow-sm` 클래스를 적용합니다.
+      3.  로고 영역과 네비게이션 영역(`<nav>`), 하단 아이콘 메뉴 영역을 구분하여 구현합니다.
+      4.  `iconNavItems` 배열을 정의하고, 각 아이템을 `map`으로 순회하며 아이콘 버튼을 생성합니다.
+      5.  각 아이콘 버튼에 `onClick`, `aria-label`, `aria-current` 속성을 설정하고, `cn` 유틸리티를 사용하여 조건부 스타일(활성 상태, 호버 상태)을 적용합니다. 아이콘 자체의 스타일(색상, `strokeWidth`)도 조건부로 변경합니다.
+
+  - id: NEW-DS-MAINMENUPANEL-001
+    title: "2.3: MainMenuPanel 컴포넌트 생성 및 스타일 적용"
+    description: |
+      주 메뉴 패널 (`MainMenuPanel.tsx`)을 생성하고, 새로운 디자인 가이드라인에 따라 스타일을 적용합니다.
+      고정 너비, 배경색, 둥근 모서리, 그림자, 내부 패딩, 패널 제목, 메뉴 아이템 목록 등을 구현합니다.
+      `activeIconMenu` prop에 따라 다른 서브메뉴 목록을 표시해야 하며, `ListItem` 공통 컴포넌트를 사용합니다.
+    filesToScan:
+      - "src/app/dashboard/components/layout/MainMenuPanel.tsx"
+    patterns:
+      - regex: 'className="w-menu-panel\s*bg-panel-background[^"]*shadow-lg' # MainMenuPanel 기본 스타일
+        message: |
+          [NEW-DS-MAINMENUPANEL-001] `MainMenuPanel.tsx`의 기본 스타일이 확인됩니다.
+          내부 패딩(`p-panel-padding-x py-panel-padding-y`), 패널 제목 스타일,
+          그리고 `ListItem` 컴포넌트를 사용한 메뉴 목록 렌더링이 올바르게 구현되었는지 확인해주세요.
+          `getMenuItemsForPanel` 함수 또는 유사한 로직을 통해 `activeIconMenu`에 맞는 메뉴가 표시되어야 합니다.
+        level: "info"
+      - regex: 'getMenuItemsForPanel\(activeIconMenu,\s*navigationItems\)' # 메뉴 아이템 로딩 로직
+        message: |
+          [NEW-DS-MAINMENUPANEL-001] `getMenuItemsForPanel` 함수를 사용하여 `activeIconMenu`에 따라 동적으로 메뉴 아이템을 가져오는 로직이 확인됩니다.
+          이 함수가 실제 프로젝트의 메뉴 데이터 구조(`navigationItems` 또는 다른 소스)를 올바르게 처리하고,
+          다양한 `panelId`에 대해 정확한 `SubMenuItem` 배열을 반환하는지 상세히 검토해야 합니다.
+          각 `SubMenuItem`의 `type`('link', 'header', 'separator', 'action')에 따른 분기 처리가 `ListItem` 또는 직접 렌더링 시 올바르게 되어 있는지도 중요합니다.
+        suggestion: |
+          // MainMenuPanel.tsx 내에서 currentMenuItems를 가져오는 부분:
+          // const { navigationItems /*, activeNavItem, handleNavItemClick */ } = useSidebar(); // 기존 컨텍스트 또는 props
+          // const currentMenuItems = getMenuItemsForPanel(activeIconMenu, navigationItems);
+          //
+          // getMenuItemsForPanel 함수 내에서 panelId에 따라 분기하여 SubMenuItem[]을 반환하는 로직을 상세히 구현해야 합니다.
+          // 예시 (panelId === 'projects'):
+          // return [
+          //   { id: 'proj-fignuts', name: 'Fignuts', href: '#', icon: Folder, type: 'link' },
+          //   { id: 'proj-header-folders', name: 'Folders (6)', type: 'header'}, // 헤더 타입
+          //   { id: 'proj-stroke', name: 'Stroke LLC', href: '#', icon: FileText, type: 'link' },
+          //   // ...
+          // ];
+        level: "warning"
+    fix: |
+      1.  `src/app/dashboard/components/layout/MainMenuPanel.tsx` 파일이 없다면 가이드 문서 2.3 섹션의 예시 코드를 참고하여 새로 생성합니다.
+      2.  `nav` 태그에 `w-menu-panel bg-panel-background p-panel-padding-x py-panel-padding-y shadow-lg flex-shrink-0 overflow-y-auto` 클래스를 적용합니다.
+      3.  패널 제목(`<h2>`) 스타일을 적용하고, `activeIconMenu` 값을 표시하도록 합니다.
+      4.  `getMenuItemsForPanel` 함수(또는 유사한 로직)를 구현하여 `activeIconMenu` 값에 따라 표시할 `SubMenuItem` 배열을 동적으로 생성합니다. 이 함수는 기존 `navigationItems` 데이터 또는 새로운 메뉴 데이터 소스를 활용해야 합니다.
+      5.  `currentMenuItems`를 `map`으로 순회하며 `ListItem` 컴포넌트 또는 타입에 따른 직접 렌더링(구분선, 헤더)을 수행합니다. `ListItem`에는 `text`, `icon`, `href`, `isActive`, `badgeCount`, `onClick` 등의 props를 전달합니다.
+
+  - id: NEW-DS-LISTITEM-001
+    title: "3.1: ListItem 공통 컴포넌트 생성 및 스타일 적용"
+    description: |
+      재사용 가능한 리스트/메뉴 아이템 컴포넌트 (`ListItem.tsx`)를 생성하고, 새로운 디자인 가이드라인에 따라 스타일과 기능을 구현합니다.
+      아이콘, 텍스트, 활성 상태, 알림 배지, 확장 가능 표시 등을 props로 제어할 수 있어야 합니다.
+    filesToScan:
+      - "src/app/dashboard/components/common/ListItem.tsx"
+    patterns:
+      - regex: 'interface\s+ListItemProps\s*{[^}]*text:\s*string[^}]*}' # ListItemProps 정의 확인
+        message: |
+          [NEW-DS-LISTITEM-001] `ListItem.tsx` 컴포넌트 및 `ListItemProps` 인터페이스가 확인됩니다.
+          `icon`, `href`, `isActive`, `badgeCount`, `isExpandable`, `onClick`, `type` 등의 주요 props가 정의되어 있고,
+          `cn` 유틸리티를 사용하여 조건부 스타일(특히 `isActive` 상태에 따른 `bg-active-item-background text-active-item-foreground`)이 올바르게 적용되는지 확인해주세요.
+          아이콘과 텍스트, 배지, 확장 아이콘의 정렬 및 스타일도 중요합니다.
+        level: "info"
+      - regex: 'className={cn\([^{}]*isActive\s*\?\s*["\']bg-active-item-background\s*text-active-item-foreground' # 활성 상태 스타일
+        message: |
+          [NEW-DS-LISTITEM-001] `ListItem`에서 `isActive` 상태에 따른 스타일 적용 로직이 확인됩니다.
+          `bg-active-item-background`, `text-active-item-foreground` 클래스가 정확히 적용되는지,
+          그리고 비활성 상태일 때의 호버 스타일(`hover:bg-hover-bg-light`)도 올바르게 작동하는지 확인해야 합니다.
+          아이콘 색상 또한 `isActive` 상태에 따라 변경되어야 합니다 (`text-active-item-foreground` 또는 `text-text-secondary`).
+          알림 배지의 스타일도 `isActive`에 따라 반전되는지 확인합니다.
+        suggestion: |
+          // ListItem.tsx 내 스타일링 핵심 부분:
+          // const baseClasses = cn(
+          //   "flex items-center gap-x-3.5 py-2.5 px-3.5 rounded-lg ...",
+          //   isActive ? "bg-active-item-background text-active-item-foreground shadow-sm" : "text-text-primary hover:bg-hover-bg-light ...",
+          //   ...
+          // );
+          // const iconClasses = cn("h-5 w-5 flex-shrink-0", isActive ? "text-active-item-foreground" : "text-text-secondary");
+          // 배지 스타일:
+          // className={cn("...", isActive ? "bg-active-item-foreground text-active-item-background" : "bg-notification-badge-bg text-notification-badge-text")}
+        level: "info"
+    fix: |
+      1.  `src/app/dashboard/components/common/ListItem.tsx` 파일이 없다면 가이드 문서 3.1 섹션의 예시 코드를 참고하여 새로 생성합니다.
+      2.  `ListItemProps` 인터페이스를 정의하여 `text`, `icon`, `href`, `isActive`, `badgeCount`, `isExpandable`, `isExpanded`, `onClick`, `type` 등의 props를 포함합니다.
+      3.  `cn` 유틸리티를 사용하여 `baseClasses`와 `iconClasses`를 정의하고, `isActive` prop에 따라 조건부 스타일을 적용합니다. (활성: `bg-active-item-background text-active-item-foreground`, 비활성 호버: `hover:bg-hover-bg-light`)
+      4.  아이콘, 텍스트, 알림 배지, 확장 아이콘을 `flex`를 사용하여 올바르게 정렬하고 스타일을 적용합니다. 알림 배지 스타일도 `isActive`에 따라 변경되도록 합니다.
+      5.  `type` prop (link 또는 button)에 따라 `Link` 컴포넌트 또는 `button` 태그로 렌더링하도록 분기 처리하고, 적절한 ARIA 속성(`aria-current`, `aria-pressed`, `aria-expanded`)을 설정합니다.
+
+  - id: NEW-DS-CONTEXT-001
+    title: "4.1: SidebarContext를 새로운 레이아웃 및 상태 관리에 맞게 수정"
+    description: |
+      기존 `SidebarContext.tsx`를 새로운 레이아웃 시스템에 맞게 수정합니다.
+      아이콘 바에서 선택된 주 메뉴를 나타내는 `activeIconMenu` 상태와 이를 설정하는 함수를 추가합니다.
+      `navigationItems` 데이터 구조를 아이콘 바 메뉴와 주 메뉴 패널의 서브메뉴를 모두 지원하도록 재구성하거나,
+      컨텍스트에서 `activeIconMenu`에 따라 서브메뉴를 동적으로 제공하는 로직을 추가합니다.
+      기존 `collapsed` 상태는 모바일에서 주 메뉴 패널의 표시 여부 등으로 용도가 변경될 수 있습니다.
+    filesToScan:
+      - "src/app/dashboard/contexts/SidebarContext.tsx"
+    patterns:
+      - regex: 'interface\s+SidebarContextType\s*{[^}]*activeIconMenu\s*:\s*string[^}]*}' # activeIconMenu 상태 확인
+        message: |
+          [NEW-DS-CONTEXT-001] `SidebarContextType`에 `activeIconMenu` 상태와 관련 함수(예: `setActiveIconMenu`)가 정의되어 있는지 확인합니다.
+          `navigationItems`가 새로운 계층적 메뉴 구조(아이콘 바 메뉴, 각 아이콘 메뉴에 대한 서브메뉴)를 반영하도록 수정되었는지,
+          또는 `activeIconMenu`에 따라 적절한 서브메뉴를 반환하는 로직이 컨텍스트 내에 있는지 검토해야 합니다.
+        level: "warning"
+    suggestion: |
+      // SidebarContext.tsx 수정 제안:
+      // interface IconSidebarItem { name: string; icon: React.ElementType; panelId: string; }
+      // interface MainMenuItem { id: string; name: string; href?: string; icon?: React.ElementType; type: 'link' | 'header' | 'separator'; count?: number; }
+      //
+      // interface SidebarContextType {
+      //   iconNavItems: IconSidebarItem[]; // 아이콘 바 메뉴 데이터
+      //   getMainMenuItems: (panelId: string) => MainMenuItem[]; // panelId에 따른 주 메뉴 아이템 반환 함수
+      //   activeIconMenu: string;
+      //   setActiveIconMenu: (panelId: string) => void;
+      //   activeSubNavItem?: string; // 활성 서브메뉴 아이템 ID (또는 이름/경로)
+      //   setActiveSubNavItem: (itemId: string) => void;
+      //   isMainMenuOpenOnMobile: boolean; // 모바일에서 주 메뉴 패널 표시 여부
+      //   toggleMainMenuOnMobile: () => void;
+      //   // 기존 activeNavItem, handleNavItemClick 등은 서브메뉴 레벨에서 사용되도록 조정
+      // }
+      //
+      // SidebarProvider 내에서 navigationItems를 파싱하여 iconNavItems와 getMainMenuItems 로직을 구현합니다.
+    fix: |
+      1.  `src/app/dashboard/contexts/SidebarContext.tsx` 파일을 엽니다.
+      2.  `SidebarContextType` 인터페이스에 `activeIconMenu: string`과 `setActiveIconMenu: (panelId: string) => void`를 추가합니다.
+      3.  `navigationItems`를 관리하는 방식을 재검토합니다.
+          * 옵션 A: `navigationItems` 자체를 계층적 구조 (예: `{ iconBar: IconNavItem[], mainMenu: { [panelId: string]: SubMenuItem[] } }`)로 변경합니다.
+          * 옵션 B: 기존 `navigationItems`를 유지하되, 컨텍스트 내에 `activeIconMenu` 값에 따라 해당 서브메뉴 목록을 필터링하거나 생성하는 헬퍼 함수(예: `getCurrentSubMenu`)를 제공합니다. (가이드 문서의 `getMenuItemsForPanel` 함수와 유사)
+      4.  `SidebarProvider` 컴포넌트 내에서 `activeIconMenu` 상태를 `useState`로 관리하고, 컨텍스트 값으로 제공합니다.
+      5.  기존 `collapsed`, `activeNavItem` 등의 상태가 새로운 레이아웃에서 어떤 의미를 갖는지 재정의하고 필요에 따라 수정하거나 제거합니다. (예: `collapsed` -> `isMainMenuOpenOnMobile`)
+
+  - id: NEW-DS-REPLACE-OLD-SIDEBAR-001
+    title: "4.2: 기존 Sidebar.tsx 사용을 IconSidebar 및 MainMenuPanel로 대체"
+    description: |
+      `DashboardLayout.tsx` 등에서 기존의 단일 `Sidebar.tsx` 컴포넌트를 사용하는 부분을 찾아,
+      새롭게 구현된 `IconSidebar.tsx`와 `MainMenuPanel.tsx`를 사용하는 구조로 대체합니다.
+      기존 `Sidebar.tsx` 파일은 더 이상 필요하지 않으므로 삭제하거나 백업 후 제거하는 것을 고려합니다.
+    filesToScan:
+      - "src/app/dashboard/components/layout/DashboardLayout.tsx"
+      - "src/app/dashboard/page.tsx" # 또는 Dashboard 컴포넌트가 있는 곳
+    patterns:
+      - regex: 'import\s+Sidebar\s+from\s+["\']\.\.?/Sidebar["\']' # 기존 Sidebar 임포트 감지
+        message: |
+          [NEW-DS-REPLACE-OLD-SIDEBAR-001] 기존 `Sidebar.tsx` 컴포넌트를 임포트하고 있는 것으로 보입니다.
+          새로운 디자인에서는 `IconSidebar`와 `MainMenuPanel`로 역할이 분리되었으므로,
+          `DashboardLayout.tsx`에서 이 두 컴포넌트를 직접 사용하도록 수정해야 합니다.
+          기존 `Sidebar.tsx` 파일은 삭제해도 무방할 수 있습니다.
+        level: "error"
+    suggestion: |
+      // DashboardLayout.tsx에서:
+      // import Sidebar from './Sidebar'; // 이 줄을 삭제
+      // import IconSidebar from './IconSidebar'; // 추가
+      // import MainMenuPanel from './MainMenuPanel'; // 추가
+      //
+      // <Sidebar /> // 이 부분을 아래와 같이 변경
+      // <>
+      //   <IconSidebar {...props} />
+      //   <MainMenuPanel {...props} />
+      // </>
+    fix: |
+      1.  `DashboardLayout.tsx` (또는 기존 `Sidebar`를 사용하던 다른 레이아웃 관련 파일)에서 `import Sidebar from ...` 구문을 찾아 삭제합니다.
+      2.  대신 `import IconSidebar from './IconSidebar';`와 `import MainMenuPanel from './MainMenuPanel';`을 추가합니다.
+      3.  JSX 코드 내에서 `<Sidebar ... />` 부분을 찾아, `<IconSidebar ... />`와 `<MainMenuPanel ... />`을 가이드 문서 2.1 섹션의 `DashboardLayout.tsx` 예시와 같이 배치하고 필요한 props를 전달합니다.
+      4.  프로젝트에서 더 이상 사용되지 않는 기존 `src/app/dashboard/components/layout/Sidebar.tsx` 파일은 삭제하거나 안전한 곳에 백업 후 제거합니다.
+
+  - id: NEW-DS-CONTENTPANEL-001
+    title: "4.3: 콘텐츠 패널(DocumentPanel 등) 스타일 및 내부 리스트 아이템 업데이트"
+    description: |
+      `DocumentPanel.tsx`, `ProjectPanel.tsx` 등 기존 콘텐츠 관련 패널들이 메인 콘텐츠 영역 내에서 새로운 디자인 시스템을 따르도록 수정합니다.
+      패널 자체의 배경, 패딩, 둥근 모서리, 그림자 스타일을 적용하고, 내부 목록 표시에 새로운 `ListItem.tsx` 공통 컴포넌트를 사용하도록 변경합니다.
+      패널 헤더(제목, 액션 버튼 등)의 스타일도 새로운 디자인에 맞게 업데이트합니다.
+    filesToScan:
+      - "src/app/dashboard/components/panels/**/*.tsx"
+      - "src/app/dashboard/components/views/**/*.tsx" # 뷰 컴포넌트도 패널 스타일을 가질 수 있음
+    patterns:
+      - regex: '(<DocumentPanel|<ProjectPanel|<SettingsView)[^>]*isOpen={[^}]+}[^>]*>' # 기존 패널/뷰 컴포넌트 사용 감지
+        message: |
+          [NEW-DS-CONTENTPANEL-001] 기존 패널/뷰 컴포넌트(`DocumentPanel`, `ProjectPanel`, `SettingsView` 등)가 사용되고 있습니다.
+          이 컴포넌트들의 최상위 `div`에 새로운 패널 스타일(`bg-panel-background`, `p-panel-padding-x lg:p-panel-padding-y`, `rounded-xl`, `shadow-panel`)을 적용해야 합니다.
+          내부의 리스트는 `ListItem` 컴포넌트를 사용하여 새로운 디자인으로 업데이트하고, 헤더 및 버튼 스타일도 통일성을 갖도록 수정해주세요.
+        level: "warning"
+    suggestion: |
+      // DocumentPanel.tsx (또는 다른 패널/뷰 컴포넌트)의 최상위 div 예시:
+      // <div className="bg-panel-background p-panel-padding-x lg:p-panel-padding-y rounded-xl shadow-panel h-full flex flex-col">
+      //   {/* 패널 헤더 */}
+      //   <div className="flex items-center justify-between pb-4 mb-4 border-b border-border-color">
+      //     <h2 className="text-xl font-semibold text-text-primary">문서</h2>
+      //     <button type="button" onClick={onOpenDocumentEditor} className="flex items-center gap-x-2 px-4 py-2 text-sm font-semibold bg-active-item-background text-active-item-foreground rounded-lg hover:opacity-90 transition-opacity">
+      //       <PlusCircle className="h-4 w-4" /> 새 문서 작성
+      //     </button>
+      //   </div>
+      //   {/* 패널 본문 (리스트 등) */}
+      //   <ul className="space-y-2 overflow-y-auto flex-1">
+      //     {documentsData.map((doc) => (
+      //       <ListItem key={doc.id} text={doc.name} icon={FileText} onClick={() => onDocumentClick(doc)} />
+      //     ))}
+      //   </ul>
+      // </div>
+    fix: |
+      1.  `src/app/dashboard/components/panels/` 및 `src/app/dashboard/components/views/` 디렉토리 내의 각 패널/뷰 컴포넌트 파일(예: `DocumentPanel.tsx`, `ProjectPanel.tsx`, `SettingsView.tsx`)을 엽니다.
+      2.  각 컴포넌트의 최상위 `div` (또는 적절한 루트 요소)에 새로운 패널 스타일 클래스(`bg-panel-background`, `p-panel-padding-x lg:p-panel-padding-y`, `rounded-xl`, `shadow-panel`, `h-full flex flex-col` 등)를 적용합니다.
+      3.  패널 내부의 헤더 영역(제목, 액션 버튼 등) 스타일을 가이드 문서 4.3 섹션의 예시와 같이 새로운 디자인 시스템에 맞게 수정합니다. (예: 제목은 `text-xl font-semibold text-text-primary`, 버튼은 `bg-active-item-background text-active-item-foreground rounded-lg` 등)
+      4.  문서 목록, 프로젝트 목록 등 기존에 직접 `div`나 `li`로 렌더링하던 부분을 새로운 `ListItem.tsx` 공통 컴포넌트를 사용하도록 변경합니다. `ListItem`에 필요한 props(`text`, `icon`, `onClick` 등)를 전달합니다.
+
+  - id: NEW-DS-STYLE-CONSISTENCY-001
+    title: "5.1: 새로운 디자인 시스템의 스타일 일관성 확인"
+    description: |
+      프로젝트 전체적으로 `tailwind.config.js`에 정의된 둥근 모서리(`rounded-xl`, `rounded-lg` 등),
+      그림자(`shadow-panel`, `shadow-icon-active` 등), 아이콘 스타일(크기, 색상, strokeWidth),
+      타이포그래피(폰트, 크기, 색상, 행간)가 새로운 디자인 가이드라인에 따라 일관되게 사용되는지 확인합니다.
+      하드코딩된 값이나 이전 스타일 시스템의 클래스 사용을 지양해야 합니다.
+    filesToScan:
+      - "src/app/dashboard/**/*.tsx"
+      - "src/components/**/*.tsx" # 전역 공통 컴포넌트 포함
+    patterns:
+      - regex: 'className="[^"]*(rounded-(sm|md|lg)(?!-xl|-2xl|-3xl|-full)|shadow-(sm|md|lg)(?!-panel|-icon-active))[^"]*"' # 이전 또는 기본 Tailwind 스케일의 rounded/shadow 사용 감지
+        message: |
+          [NEW-DS-STYLE-CONSISTENCY-001] 이전 스타일 또는 기본 Tailwind 스케일의 `rounded-*` 또는 `shadow-*` 클래스가 사용된 것 같습니다.
+          새로운 디자인 시스템에 정의된 값(예: `rounded-xl`, `shadow-panel` 또는 `tailwind.config.js`에 정의된 커스텀 값)을 일관되게 사용해주세요.
+        level: "info"
+      - regex: 'className="[^"]*text-(xs|sm|base|lg|xl|2xl|3xl|4xl|5xl|6xl)(?![^"]*text-(text-primary|text-secondary|text-tertiary|active-item-foreground))[^"]*"' # 기본 텍스트 크기 클래스 사용 시 색상 클래스 병행 확인
+        message: |
+          [NEW-DS-STYLE-CONSISTENCY-001] Tailwind의 기본 텍스트 크기 클래스(`text-sm` 등)가 사용되었습니다.
+          새로운 디자인 시스템의 텍스트 색상 클래스(`text-text-primary`, `text-text-secondary` 등)도 함께 적용하여 일관성을 유지해주세요.
+          폰트 두께(`font-medium`, `font-semibold`) 및 행간(`leading-normal` 등)도 디자인 가이드에 맞게 적용되었는지 확인합니다.
+        level: "info"
+    suggestion: |
+      // 일관된 스타일 적용 예시:
+      // 패널: className="bg-panel-background p-6 rounded-xl shadow-panel"
+      // 주 메뉴 활성 아이템: className="... bg-active-item-background text-active-item-foreground rounded-lg ..."
+      // 기본 텍스트: className="text-sm font-medium text-text-primary"
+      // 보조 아이콘: <SomeIcon className="h-5 w-5 text-text-secondary" />
+    fix: |
+      1.  프로젝트 내 모든 `.tsx` 파일을 검토하여 UI 요소에 적용된 스타일 클래스를 확인합니다.
+      2.  둥근 모서리: `rounded-sm`, `rounded-md`, `rounded-lg` 대신 새로운 디자인 시스템에 맞는 `rounded-lg`, `rounded-xl`, `rounded-2xl` 등을 일관되게 사용합니다. (주로 `rounded-lg` 또는 `rounded-xl` 사용)
+      3.  그림자: `shadow-sm`, `shadow-md`, `shadow-lg` 대신 새로운 디자인 시스템에 맞는 `shadow-panel`, `shadow-icon-active` 등을 사용하거나, `tailwind.config.js`에 정의된 커스텀 그림자를 일관되게 적용합니다.
+      4.  아이콘: `lucide-react` 아이콘 또는 다른 아이콘 라이브러리 사용 시, 크기(예: `h-5 w-5` 또는 `h-6 w-6`), 색상(예: `text-text-secondary`, `text-active-item-foreground`), `strokeWidth`(예: `strokeWidth={2}` 또는 `strokeWidth={2.5}`)를 디자인 가이드라인에 따라 일관되게 적용합니다.
+      5.  타이포그래피: 텍스트 요소에 `tailwind.config.js` 또는 `typography.ts`에 정의된 폰트 패밀리, 크기(예: `text-sm`, `text-base`, `text-xl`), 두께(예: `font-normal`, `font-medium`, `font-semibold`), 색상(예: `text-text-primary`, `text-text-secondary`), 행간(예: `leading-normal`, `leading-relaxed`)을 일관되게 적용합니다.
+
+  - id: NEW-DS-ACCESSIBILITY-001
+    title: "5.2: 새로운 디자인 요소에 대한 접근성(ARIA 속성, 키보드 탐색) 강화"
+    description: |
+      새로운 디자인의 모든 인터랙티브 요소(아이콘 버튼, 메뉴 항목, 확장/축소 버튼, 모달 등)에 대해 웹 접근성(A11y)을 강화합니다.
+      명확한 `aria-label` 제공, 키보드 포커스 및 조작 지원(`focus-visible` 스타일 포함),
+      그리고 `aria-current`, `aria-expanded`, `aria-controls`, `aria-modal` 등의 ARIA 속성을 상황에 맞게 정확히 사용해야 합니다.
+    filesToScan:
+      - "src/app/dashboard/**/*.tsx"
+      - "src/components/**/*.tsx"
+    patterns:
+      - regex: '<button[^>]*>(?![^<]*<span[^>]*aria-hidden="true"[^<]*<\/span>|\s*aria-label\s*=|[^<]*[a-zA-Z\d\s]+[^<]*)<[^>]*icon[^>]*>.*?<\/button>' # 아이콘 버튼에 aria-label 부재 감지
+        message: |
+          [NEW-DS-ACCESSIBILITY-001] 아이콘만 포함된 것으로 보이는 버튼에 `aria-label`이 누락되었을 수 있습니다.
+          스크린 리더 사용자가 버튼의 기능을 이해할 수 있도록 명확한 `aria-label`을 반드시 제공해주세요.
+          예: `<button aria-label="메시지 보기"><MessageSquareIcon aria-hidden="true" /></button>`
+        level: "warning"
+      - regex: '(isActive\s*&&\s*<[^>]+className="[^"]*bg-active-item-background)(?!.*aria-(current|selected))' # 활성 메뉴 아이템에 aria-current/selected 부재 감지
+        message: |
+          [NEW-DS-ACCESSIBILITY-001] 활성화된 메뉴 아이템으로 보이지만, `aria-current="page"` (네비게이션 링크의 경우) 또는 `aria-selected="true"` (탭과 유사한 역할의 경우) 속성이 누락된 것 같습니다.
+          스크린 리더 사용자에게 현재 선택된 항목임을 명확히 알려주기 위해 적절한 ARIA 속성을 추가해주세요.
+        level: "warning"
+      - regex: 'isExpandable\s*&&\s*(?!.*aria-expanded)' # 확장 가능한 요소에 aria-expanded 부재 감지
+        message: |
+          [NEW-DS-ACCESSIBILITY-001] 확장 가능한 UI 요소(예: 드롭다운, 아코디언 메뉴 아이템)로 보이지만 `aria-expanded` 속성이 누락된 것 같습니다.
+          현재 확장 상태를 스크린 리더에 전달하기 위해 `aria-expanded={isExpanded}`와 같이 설정하고,
+          필요한 경우 `aria-controls`로 관련 콘텐츠 영역의 ID를 연결해주세요.
+        level: "info"
+    suggestion: |
+      // IconSidebar의 아이콘 버튼:
+      // <button aria-label="메시지" aria-current={activeIconMenu === 'messages' ? 'page' : undefined} ...>
+      //   <MessageSquareIcon aria-hidden="true" />
+      // </button>
+
+      // MainMenuPanel의 ListItem (링크 타입):
+      // <Link href={href} aria-current={isActive ? 'page' : undefined} ...>...</Link>
+
+      // MainMenuPanel의 ListItem (확장 가능한 버튼 타입):
+      // <button aria-expanded={isExpanded} aria-controls="submenu-id" ...>...</button>
+      // {isExpanded && <ul id="submenu-id">...</ul>}
+
+      // 모든 인터랙티브 요소에 focus-visible 스타일 적용:
+      // className="... focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-active-item-background ..."
+    fix: |
+      1.  아이콘만 있는 모든 버튼 (`IconSidebar.tsx`의 아이콘 버튼, `ListItem.tsx` 내 아이콘 버튼 등)에 명확한 `aria-label`을 추가합니다. 아이콘 자체에는 `aria-hidden="true"`를 설정할 수 있습니다.
+      2.  모든 인터랙티브 요소(버튼, 링크 등)에 키보드 포커스 시 명확한 시각적 표시를 제공하도록 `focus-visible:` Tailwind 유틸리티(예: `focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-active-item-background`)를 적용합니다. `focus:outline-none`도 함께 사용하여 기본 포커스 링을 제거할 수 있습니다.
+      3.  `MainMenuPanel.tsx`의 `ListItem` 컴포넌트나 유사한 네비게이션 링크에 대해, `isActive` 상태일 때 `aria-current="page"` (또는 상황에 따라 `aria-selected="true"`) 속성을 동적으로 설정합니다.
+      4.  확장/축소 기능을 가진 메뉴 아이템이나 섹션이 있다면, 해당 트리거 요소에 `aria-expanded` 상태를 동적으로 바인딩하고, `aria-controls`로 제어 대상이 되는 콘텐츠 영역의 `id`를 연결합니다.
+      5.  모달, 다이얼로그, 팝오버 등의 오버레이 컴포넌트가 있다면, Esc 키로 닫기 기능, 포커스 트랩, `role="dialog"`, `aria-modal="true"`, `aria-labelledby` (또는 `aria-label`) 등의 접근성 지침을 철저히 준수하도록 수정합니다.
+
+  - id: NEW-DS-STATE-INTERACTION-001
+    title: "6.1: 새로운 레이아웃에 따른 상태 관리 및 컴포넌트 간 연동 로직 검토"
+    description: |
+      새로운 듀얼 패널 레이아웃(아이콘 바, 주 메뉴 패널) 및 메인 콘텐츠 영역 간의 상태 흐름과 인터랙션 로직을 검토하고 최적화합니다.
+      `IconSidebar`에서 선택된 주 메뉴(`activeIconMenu`)가 `MainMenuPanel`에 올바르게 전달되어 해당 서브메뉴를 표시하는지,
+      그리고 `MainMenuPanel`에서 서브메뉴 항목 클릭 시 메인 콘텐츠 영역의 뷰가 적절히 변경되거나 라우팅이 일어나는지 확인합니다.
+      필요시 React Context (`SidebarContext`)를 적극 활용하거나, Zustand 등의 상태 관리 라이브러리 도입을 고려하여 명확하고 효율적인 상태 관리 패턴을 적용합니다.
+    filesToScan:
+      - "src/app/dashboard/components/layout/DashboardLayout.tsx"
+      - "src/app/dashboard/contexts/SidebarContext.tsx"
+      - "src/app/dashboard/components/layout/IconSidebar.tsx"
+      - "src/app/dashboard/components/layout/MainMenuPanel.tsx"
+      - "src/app/dashboard/page.tsx" # 또는 메인 대시보드 뷰 로직이 있는 곳
+    patterns:
+      - regex: 'const\s*\[activeIconMenu,\s*setActiveIconMenu\]\s*=\s*useState<string>\s*\(' # DashboardLayout의 상태 정의
+        message: |
+          [NEW-DS-STATE-INTERACTION-001] `DashboardLayout.tsx`에서 `activeIconMenu` 상태가 `useState`로 관리되고 있습니다.
+          이 상태가 `IconSidebar`에서 `setActiveIconMenu`를 통해 업데이트되고, `MainMenuPanel`로 `activeIconMenu` prop이 전달되어
+          올바른 서브메뉴를 표시하는지 전체 흐름을 확인해주세요.
+          `SidebarContext`를 사용하여 이 상태를 전역적으로 관리하는 것도 좋은 방법입니다.
+        level: "info"
+      - regex: 'const\s*{\s*navigationItems,\s*activeNavItem,\s*handleNavItemClick\s*}\s*=\s*useSidebar\(\);' # MainMenuPanel에서 컨텍스트 사용
+        message: |
+          [NEW-DS-STATE-INTERACTION-001] `MainMenuPanel.tsx`에서 `useSidebar` 컨텍스트를 사용하고 있습니다.
+          컨텍스트에서 제공하는 `navigationItems` (또는 새로운 메뉴 데이터 구조/함수)와 `activeIconMenu` prop을 조합하여
+          올바른 `currentMenuItems`를 생성하는 로직 (`getMenuItemsForPanel` 등)이 정확한지 확인해야 합니다.
+          서브메뉴 클릭 시 `handleNavItemClick` 또는 새로운 상태 업데이트 함수(`setActiveSubMenuItemId`)가 호출되어
+          메인 콘텐츠 뷰 변경 또는 라우팅이 올바르게 트리거되는지 검토해주세요.
+        level: "warning"
+    suggestion: |
+      **상태 관리 및 연동 로직 검토 항목:**
+      1.  **`activeIconMenu` 상태 흐름:**
+          * `DashboardLayout`에서 `activeIconMenu` 상태 정의 (`useState`).
+          * `IconSidebar`로 `activeIconMenu`와 `setActiveIconMenu` 전달.
+          * `IconSidebar` 내 아이콘 버튼 클릭 시 `setActiveIconMenu` 호출.
+          * `MainMenuPanel`로 `activeIconMenu` 전달.
+      2.  **`MainMenuPanel`의 서브메뉴 로딩:**
+          * `MainMenuPanel`은 전달받은 `activeIconMenu`와 `SidebarContext` (또는 props)로부터 받은 전체 메뉴 데이터를 사용하여 현재 표시할 서브메뉴 목록 (`currentMenuItems`)을 결정.
+          * `getMenuItemsForPanel`과 같은 헬퍼 함수 로직의 정확성 검증.
+      3.  **서브메뉴 활성화 및 콘텐츠 변경:**
+          * `MainMenuPanel` 내에서 서브메뉴 아이템 클릭 시:
+              * `activeSubMenuItemId` (로컬 상태 또는 컨텍스트 상태) 업데이트.
+              * 필요시 `handleNavItemClick` (기존 컨텍스트 함수) 호출 또는 새로운 전용 함수 호출.
+              * Next.js 라우터를 사용하여 페이지 이동 (`Link` 컴포넌트 또는 `router.push`).
+              * 또는, 메인 콘텐츠 영역에 표시될 뷰 컴포넌트를 변경하는 상태 업데이트 (기존 `PanelManager`와 유사한 로직).
+      4.  **`SidebarContext` 역할 재정의:**
+          * `activeIconMenu`와 `setActiveIconMenu`를 컨텍스트로 옮겨 전역 관리 고려.
+          * 메뉴 데이터 (`iconNavItems`, `getMenuItemsForPanel` 로직 등)를 컨텍스트에서 제공하는 방안 고려.
+          * 모바일용 `isMainMenuOpenOnMobile` 및 `toggleMainMenuOnMobile` 상태/함수 추가 고려.
+    fix: |
+      1.  `DashboardLayout.tsx`에서 `activeIconMenu` 상태와 `setActiveIconMenu` 함수가 `IconSidebar`와 `MainMenuPanel`에 올바르게 props로 전달되는지 확인하고, `IconSidebar` 내 아이콘 버튼 클릭 시 `setActiveIconMenu`가 호출되어 상태가 업데이트되는지 검증합니다.
+      2.  `MainMenuPanel.tsx`에서 `activeIconMenu` prop과 `SidebarContext` (또는 다른 메뉴 데이터 소스)를 사용하여 `currentMenuItems`를 생성하는 로직(예: `getMenuItemsForPanel`)을 상세히 검토하고, 각 `panelId`에 대해 올바른 서브메뉴가 반환되는지 확인합니다.
+      3.  `MainMenuPanel.tsx`의 `ListItem` 클릭 핸들러(`handleSubItemClick`)에서 `activeSubMenuItemId` 상태 업데이트, 라우팅(`Link` 또는 `router.push`), 또는 메인 콘텐츠 뷰를 변경하는 로직(예: `PanelManager`의 `setActivePanel`과 유사한 함수 호출)이 올바르게 구현되었는지 확인하고 필요시 수정합니다.
+      4.  `SidebarContext.tsx`를 검토하여, `activeIconMenu` 상태, 메뉴 데이터 제공 로직, 모바일 메뉴 토글 로직 등을 컨텍스트로 이전하거나 추가하여 상태 관리의 중앙 집중화 및 코드 단순화를 고려합니다.
+

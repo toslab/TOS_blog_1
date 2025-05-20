@@ -10,9 +10,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/dashboard
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/dashboard_UI/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/dashboard_UI/avatar"
 import { User, Lock, Mail, Phone, Building, MapPin, X } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { useSidebar } from "../contexts/SidebarContext"
 
 // 컴포넌트 props 타입에 onClose 추가
 export default function Settings({ onClose }: { onClose?: () => void }) {
+  const { isMobileView } = useSidebar()
   const [profileImage, setProfileImage] = useState<string | null>(
     "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
   )
@@ -101,20 +104,28 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
 
   // 제목 부분을 다음과 같이 수정하여 X 버튼 추가
   return (
-    <div className="container mx-auto py-6">
+    <div 
+      className={cn(
+        "h-full overflow-y-auto bg-panel-background rounded-xl shadow-panel",
+        isMobileView ? "p-4" : "p-panel-padding-x lg:p-panel-padding-y"
+      )}
+    >
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">설정</h1>
+        <h1 className="text-xl font-semibold text-text-primary">설정</h1>
         {onClose && (
-          <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 transition-colors" aria-label="닫기">
-            <X className="size-5 text-gray-500" />
+          <button 
+            onClick={onClose} 
+            className="p-1.5 rounded-md hover:bg-hover-bg-light transition-colors duration-200" 
+            aria-label="닫기">
+            <X className="h-5 w-5 text-icon-color" />
           </button>
         )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {/* 프로필 사진 섹션 */}
-        <Card className="md:col-span-1">
-          <CardHeader>
+        <Card className="md:col-span-1 bg-transparent shadow-none border-none">
+          <CardHeader className="px-0 pt-0">
             <CardTitle>프로필 사진</CardTitle>
             <CardDescription>프로필 이미지를 변경합니다.</CardDescription>
           </CardHeader>
@@ -145,15 +156,21 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
         {/* 프로필 정보 및 비밀번호 탭 */}
         <div className="md:col-span-3">
           <Tabs defaultValue="profile">
-            <TabsList className="mb-4">
-              <TabsTrigger value="profile">프로필 정보</TabsTrigger>
-              <TabsTrigger value="password">비밀번호 변경</TabsTrigger>
+            <TabsList className="mb-4 bg-transparent p-0">
+              <TabsTrigger 
+                value="profile" 
+                className="data-[state=active]:bg-active-item-background data-[state=active]:text-active-item-foreground data-[state=active]:shadow-sm hover:bg-hover-bg-light text-text-secondary data-[state=active]:hover:bg-active-item-background/90 rounded-md px-3 py-1.5 text-sm font-medium"
+              >프로필 정보</TabsTrigger>
+              <TabsTrigger 
+                value="password" 
+                className="data-[state=active]:bg-active-item-background data-[state=active]:text-active-item-foreground data-[state=active]:shadow-sm hover:bg-hover-bg-light text-text-secondary data-[state=active]:hover:bg-active-item-background/90 rounded-md px-3 py-1.5 text-sm font-medium"
+              >비밀번호 변경</TabsTrigger>
             </TabsList>
 
             {/* 프로필 정보 탭 */}
             <TabsContent value="profile">
-              <Card>
-                <CardHeader>
+              <Card className="bg-transparent shadow-none border-none">
+                <CardHeader className="px-0 pt-0">
                   <CardTitle>프로필 정보</CardTitle>
                   <CardDescription>개인 정보를 관리합니다.</CardDescription>
                 </CardHeader>
@@ -240,8 +257,8 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
 
             {/* 비밀번호 변경 탭 */}
             <TabsContent value="password">
-              <Card>
-                <CardHeader>
+              <Card className="bg-transparent shadow-none border-none">
+                <CardHeader className="px-0 pt-0">
                   <CardTitle>비밀번호 변경</CardTitle>
                   <CardDescription>계정 보안을 위해 주기적으로 비밀번호를 변경하세요.</CardDescription>
                 </CardHeader>

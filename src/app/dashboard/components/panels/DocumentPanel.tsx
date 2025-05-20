@@ -1,9 +1,10 @@
 'use client';
 
-import { X } from 'lucide-react';
+import { X, FilePlus, Archive, FileText } from 'lucide-react';
 import { useSidebar } from '../../contexts/SidebarContext';
 import { Document, BasePanelProps } from '../../types';
-import { TouchTarget } from '@/components/Button';
+import ListItem from '../common/ListItem';
+import { cn } from '@/lib/utils';
 
 interface DocumentPanelProps extends BasePanelProps {
   documentsData: Document[];
@@ -24,66 +25,72 @@ export default function DocumentPanel({
 
   if (!isOpen) return null;
 
+  const documentListItems = (documentsData || []).slice(0, 5).map(doc => ({
+    id: `doc-${doc.id}`,
+    name: doc.title,
+    onClick: () => onDocumentClick(doc),
+    icon: FileText,
+    type: 'link' as const,
+    meta: `${doc.category} - ${doc.lastUpdated}`,
+  }));
+
   return (
-    <div className={`
-      h-full
-      overflow-y-auto 
-      bg-[hsl(var(--sidebar-background))]
-      ${isMobileView ? 'py-6 px-4' : 'p-4'}
-    `}>
-      <div className="flex items-center justify-between pb-4">
-        <h2 className="text-lg font-semibold text-[hsl(var(--sidebar-foreground))]">문서</h2>
-        <TouchTarget>
+    <div 
+      className={cn(
+        "h-full overflow-y-auto bg-panel-background rounded-xl shadow-panel",
+        isMobileView ? "p-4" : "p-panel-padding-x lg:p-panel-padding-y",
+      )}
+    >
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl font-semibold text-text-primary">문서</h2>
+        {onClose && (
           <button 
             onClick={onClose} 
-            className="rounded-full p-1 hover:bg-[hsl(var(--sidebar-accent))] transition-colors duration-200"
-            aria-label="문서 패널 닫기"
+            className="p-1.5 rounded-md hover:bg-hover-bg-light transition-colors duration-200"
+            aria-label="패널 닫기"
           >
-            <X className="size-5 text-[hsl(var(--sidebar-foreground))]" />
+            <X className="h-5 w-5 text-icon-color" />
           </button>
-        </TouchTarget>
+        )}
       </div>
       
-      <div className="flex gap-2 mb-4">
+      <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <button
           type="button"
           onClick={onOpenDocumentEditor}
-          className="flex-1 rounded-md bg-[hsl(var(--primary))] px-3 py-2 text-sm font-semibold text-[hsl(var(--primary-foreground))] shadow-sm hover:bg-[hsl(var(--primary))]/90 transition-colors duration-200"
+          className="flex items-center justify-center gap-x-2 flex-1 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
+          <FilePlus className="h-5 w-5" />
           새 문서 작성
         </button>
         <button
           type="button"
           onClick={onOpenDocumentArchive}
-          className="flex-1 rounded-md bg-[hsl(var(--secondary))] px-3 py-2 text-sm font-semibold text-[hsl(var(--secondary-foreground))] shadow-sm ring-1 ring-inset ring-[hsl(var(--border))] hover:bg-[hsl(var(--accent))] transition-colors duration-200"
+          className="flex items-center justify-center gap-x-2 flex-1 rounded-lg bg-secondary px-4 py-2.5 text-sm font-semibold text-secondary-foreground shadow-sm ring-1 ring-inset ring-border hover:bg-accent hover:text-accent-foreground transition-colors duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
         >
-          아카이브
+          <Archive className="h-5 w-5" />
+          아카이브 보기
         </button>
       </div>
 
       <div>
-        <h3 className="text-sm font-medium text-[hsl(var(--muted-foreground))] mb-2">최근 문서</h3>
-        <div className="grid grid-cols-1 gap-3">
-          {(documentsData || []).slice(0, 3).map((doc) => (
-            <div
-              key={doc.id}
-              className="group rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-3 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer"
-              onClick={() => onDocumentClick(doc)}
-              onKeyDown={(e) => e.key === 'Enter' && onDocumentClick(doc)}
-              tabIndex={0}
-              role="button"
-              aria-label={`${doc.title} 문서 열기`}
-            >
-              <h3 className="text-sm font-medium text-[hsl(var(--card-foreground))] group-hover:text-[hsl(var(--primary))] truncate">
-                {doc.title}
-              </h3>
-              <div className="mt-1 flex items-center justify-between text-xs text-[hsl(var(--muted-foreground))]">
-                <span>{doc.category}</span>
-                <span>{doc.lastUpdated}</span>
-              </div>
-            </div>
-          ))}
-        </div>
+        <h3 className="text-base font-semibold text-text-secondary mb-3">최근 문서</h3>
+        {documentListItems.length > 0 ? (
+          <ul className="space-y-1">
+            {documentListItems.map((item) => (
+              <ListItem 
+                key={item.id} 
+                id={item.id}
+                name={item.name}
+                type={item.type}
+                icon={FileText}
+                onClick={item.onClick} 
+              />
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-text-muted">최근 문서가 없습니다.</p>
+        )}
       </div>
     </div>
   );

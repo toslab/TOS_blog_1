@@ -3,14 +3,9 @@
 import { useState, useEffect, ReactNode } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Calendar, FileText, BarChart3, Settings, Search, X } from "lucide-react"
-import RichTextEditor from "./rich-text-editor"
-import SettingsComponent from "./settings"
-import CalendarComponent from "./calendar"
 import { Button } from "@/components/Button"
-import Reports from "./reports"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/dashboard_UI/dropdown-menu"
 import DashboardLayoutWithProvider from "./layout/DashboardLayout"
-import { NavigationItem } from "../contexts/SidebarContext"
+import { IconNavItem } from "../contexts/SidebarContext"
 import PanelManager from "./panels/PanelManager"
 import { useSidebar } from "../contexts/SidebarContext"
 import { SearchProvider } from "../contexts/SearchContext"
@@ -32,13 +27,6 @@ const projectsData = [
   { id: 6, name: "사용자 연구", status: "완료", lastUpdated: "1주일 전", team: "연구" },
   { id: 7, name: "콘텐츠 전략", status: "계획", lastUpdated: "2일 전", team: "마케팅" },
   { id: 8, name: "성능 최적화", status: "진행 중", lastUpdated: "3일 전", team: "개발" },
-]
-
-// 네비게이션 메뉴 수정 - Calendar, Document, Report만 남기기
-const navigation = [
-  { name: "Calendar", href: "#", icon: Calendar, current: true },
-  { name: "Documents", href: "#", icon: FileText, current: false, hasPanel: true },
-  { name: "Reports", href: "#", icon: BarChart3, current: false },
 ]
 
 // Document 아카이브 데이터 추가
@@ -193,79 +181,80 @@ const documentsData = [
   },
 ]
 
-const userNavigation = [
-  { name: "Settings", href: "#" },
-  { name: "Sign out", href: "#" },
-]
-
-function classNames(...classes: string[]) {
-  return classes.filter(Boolean).join(" ")
-}
-
 // 실제 UI 및 로직을 담당하는 내부 컴포넌트
 function InnerDashboard() {
-  const { activeNavItem, setActiveNavItem, handleNavItemClick } = useSidebar();
+  const { activeIconMenu, setActiveIconMenu } = useSidebar();
   
-  const [documentArchiveOpen, setDocumentArchiveOpen] = useState(false);
   const [documentEditorOpen, setDocumentEditorOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [calendarOpen, setCalendarOpen] = useState(false); 
   const [reportsOpen, setReportsOpen] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<(typeof documentsData)[0] | null>(null);
 
   useEffect(() => {
-    const newActiveItem = activeNavItem;
-    setCalendarOpen(newActiveItem === 'Calendar');
-    setDocumentEditorOpen(newActiveItem === 'Editor');
-    setSettingsOpen(newActiveItem === 'Settings');
-    setReportsOpen(newActiveItem === 'Reports');
+    // --- 테스트를 위해 다음 라인 활성화 ---
+    // setActiveIconMenu("Editor"); 
+    // --- 테스트가 끝나면 원래 로직으로 돌려놓거나 아래 로직과 병합 ---
+
+    const isEditorActive = activeIconMenu === 'Editor';
+    const isSettingsActive = activeIconMenu === 'Settings';
+    const isReportsActive = activeIconMenu === 'Reports';
+    const isDocumentViewActive = activeIconMenu === 'DocumentView';
+
+    setDocumentEditorOpen(isEditorActive);
+    setSettingsOpen(isSettingsActive);
+    setReportsOpen(isReportsActive);
     
-    if (newActiveItem !== "DocumentView" && newActiveItem !== "Documents" && newActiveItem !== "Projects") { 
+    if (!isDocumentViewActive && activeIconMenu !== "Documents" && activeIconMenu !== "Projects") { 
       setSelectedDocument(null);
     }
 
-    if (!newActiveItem && !settingsOpen && !documentEditorOpen && !reportsOpen && !selectedDocument) {
-        if (activeNavItem !== "Calendar") setActiveNavItem("Calendar");
+    // --- 테스트 중에는 이 기본 뷰 설정 로직을 주석 처리하거나 비활성화 ---
+    /*
+    const noSpecificViewActive = !isEditorActive && !isSettingsActive && !isReportsActive && !isDocumentViewActive && !selectedDocument;
+    if (noSpecificViewActive) {
+      if (activeIconMenu !== 'Calendar' && activeIconMenu) {
+      } else if (!activeIconMenu || activeIconMenu !== 'Calendar') {
+        setActiveIconMenu("Calendar");
+      }
     }
-  }, [activeNavItem, setActiveNavItem, settingsOpen, documentEditorOpen, reportsOpen, selectedDocument]);
+    */
+  }, [activeIconMenu, settingsOpen, documentEditorOpen, reportsOpen, selectedDocument, setActiveIconMenu]);
 
   const handleDocumentClick = (doc: (typeof documentsData)[0]) => {
     setSelectedDocument(doc);
-    setActiveNavItem("DocumentView"); 
+    setActiveIconMenu("DocumentView");
   };
 
   const handleOpenDocumentEditor = () => {
-    setActiveNavItem("Editor"); 
+    setActiveIconMenu("Editor");
   };
   
   const closeViewAndGoToCalendar = () => {
-    setActiveNavItem("Calendar");
+    setActiveIconMenu("Calendar");
   };
 
   return (
     <PanelManager
       documentsData={documentsData} 
-      handleDocumentClick={handleDocumentClick} 
+      handleDocumentClick={handleDocumentClick}
       onOpenDocumentEditor={handleOpenDocumentEditor} 
-      documentArchiveOpen={documentArchiveOpen}
-      setDocumentArchiveOpen={setDocumentArchiveOpen}
     >
       <div className="py-10 px-4 sm:px-6 lg:px-8">
         {settingsOpen ? (
           <SettingsView onClose={closeViewAndGoToCalendar} />
         ) : documentEditorOpen ? (
           <RichTextEditorView onClose={closeViewAndGoToCalendar} />
-        ) : calendarOpen ? (
+        ) : activeIconMenu === 'Calendar' ? (
           <CalendarView onCreateDocument={handleOpenDocumentEditor} />
         ) : reportsOpen ? (
           <ReportsView onClose={closeViewAndGoToCalendar} />
-        ) : activeNavItem === "DocumentView" && selectedDocument ? (
+        ) : activeIconMenu === "DocumentView" && selectedDocument ? (
            <DocumentViewer document={selectedDocument} onClose={closeViewAndGoToCalendar} />
         ) : (
           <div className="bg-white p-6 rounded-lg shadow-sm dark:bg-gray-800">
             <h1 className="text-2xl font-bold text-gray-900 mb-4 dark:text-white">대시보드 홈</h1>
             <p className="text-gray-600 dark:text-gray-300">
-              왼쪽 메뉴를 통해 기능을 선택해주세요. (현재 활성: {activeNavItem})
+              왼쪽 메뉴를 통해 기능을 선택해주세요. (현재 활성: {activeIconMenu || '없음'})
             </p>
           </div>
         )}
