@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 @plugin '@tailwindcss/typography';
 @config '../typography.ts';
@@ -35,3 +33,4 @@
   --text-9xl: 8rem;
   --text-9xl--line-height: 1;
 }
+
