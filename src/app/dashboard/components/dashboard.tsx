@@ -1,285 +1,654 @@
 "use client"
+import { useState, useEffect } from "react"
+import {
+  Settings,
+  X,
+  Search,
+  CalendarIcon,
+  FileText,
+  BarChart3,
+  Plus,
+  Archive,
+  LogOut,
+  MenuIcon,
+  ChevronDown,
+  MoreVertical,
+  PanelLeftOpen,
+  PanelLeftClose,
+  Bell,
+} from "lucide-react"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../../../../components/ui/dropdown-menu"
+import { Button } from "../../../../components/ui/button"
+import { Dialog, DialogContent } from "../../../../components/ui/dialog"
+import SettingsComponent from "./settings"
+import CalendarComponent from "./calendar"
+import RichTextEditor from "./rich-text-editor"
 
-import { useState, useEffect, ReactNode } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { Calendar, FileText, BarChart3, Settings, Search, X } from "lucide-react"
-import { Button } from "@/components/Button"
-import DashboardLayoutWithProvider from "./layout/DashboardLayout"
-import { IconNavItem } from "../contexts/SidebarContext"
-import PanelManager from "./panels/PanelManager"
-import { useSidebar } from "../contexts/SidebarContext"
-import { SearchProvider } from "../contexts/SearchContext"
-
-// 새로 분리된 뷰 컴포넌트들 import
-import SettingsView from "./views/SettingsView"
-import RichTextEditorView from "./views/RichTextEditorView"
-import CalendarView from "./views/CalendarView"
-import ReportsView from "./views/ReportsView"
-import DocumentViewer from "./document-viewer"
-
-// 프로젝트 목록 데이터
-const projectsData = [
-  { id: 1, name: "웹사이트 리디자인", status: "진행 중", lastUpdated: "2시간 전", team: "디자인" },
-  { id: 2, name: "모바일 앱 개발", status: "완료", lastUpdated: "1일 전", team: "개발" },
-  { id: 3, name: "마케팅 캠페인", status: "계획", lastUpdated: "3일 전", team: "마케팅" },
-  { id: 4, name: "대시보드 UI 개선", status: "진행 중", lastUpdated: "5시간 전", team: "디자인" },
-  { id: 5, name: "API 통합", status: "진행 중", lastUpdated: "1일 전", team: "개발" },
-  { id: 6, name: "사용자 연구", status: "완료", lastUpdated: "1주일 전", team: "연구" },
-  { id: 7, name: "콘텐츠 전략", status: "계획", lastUpdated: "2일 전", team: "마케팅" },
-  { id: 8, name: "성능 최적화", status: "진행 중", lastUpdated: "3일 전", team: "개발" },
+// 네비게이션 아이콘 수정
+const navigation = [
+  { name: "Calendar", href: "#", icon: CalendarIcon, current: true },
+  { name: "Documents", href: "#", icon: FileText, current: false, hasPanel: true },
+  { name: "Reports", href: "#", icon: BarChart3, current: false },
 ]
 
-// Document 아카이브 데이터 추가
-const documentsData = [
-  {
-    id: 1,
-    title: "프로젝트 계획서",
-    category: "계획",
-    lastUpdated: "2시간 전",
-    author: "김철수",
-    content: `# 프로젝트 계획서: 웹사이트 리디자인
-
-## 1. 프로젝트 개요
-
-본 프로젝트는 회사의 기존 웹사이트를 현대적인 디자인과 기술로 리디자인하는 것을 목표로 합니다. 현재 웹사이트는 5년 전에 개발되었으며, 모바일 대응이 미흡하고 사용자 경험이 최적화되어 있지 않습니다.
-
-## 2. 프로젝트 목표
-
-- 반응형 디자인으로 모든 디바이스에서 최적의 사용자 경험 제공
-- 웹사이트 로딩 속도 개선 (현재 평균 5초에서 2초 이하로 단축)
-- 검색 엔진 최적화(SEO) 개선
-- 사용자 인터페이스 현대화 및 브랜드 아이덴티티 강화
-- 콘텐츠 관리 시스템 도입으로 비개발자도 쉽게 콘텐츠 업데이트 가능하도록 개선
-
-## 3. 프로젝트 범위
-
-### 포함 사항
-- 메인 페이지 리디자인
-- 제품/서비스 소개 페이지 개발
-- 회사 소개 및 연혁 페이지 개발
-- 고객 지원 및 FAQ 섹션 개발
-- 반응형 디자인 구현
-- 콘텐츠 관리 시스템 구축
-
-### 제외 사항
-- 온라인 결제 시스템 구축
-- 회원 관리 시스템 고도화 (2차 프로젝트로 진행 예정)
-- 다국어 지원 (추후 확장 계획)
-
-## 4. 일정 계획
-
-- 기획 및 요구사항 분석: 2주
-- 디자인 시안 개발: 3주
-- 프론트엔드 개발: 4주
-- 백엔드 개발 및 CMS 구축: 3주
-- 테스트 및 품질 보증: 2주
-- 콘텐츠 마이그레이션: 1주
-- 최종 검수 및 출시 준비: 1주
-
-총 프로젝트 기간: 16주 (약 4개월)
-
-## 5. 예산 계획
-
-- 인건비: 8,000만원
-- 디자인 및 에셋: 1,500만원
-- 서버 및 인프라: 500만원
-- 라이센스 및 외부 서비스: 1,000만원
-- 예비비: 1,000만원
-
-총 예산: 1억 2,000만원
-
-## 6. 팀 구성
-
-- 프로젝트 매니저: 1명
-- UI/UX 디자이너: 2명
-- 프론트엔드 개발자: 3명
-- 백엔드 개발자: 2명
-- QA 엔지니어: 1명
-- 콘텐츠 전문가: 1명
-
-## 7. 위험 요소 및 대응 방안
-
-1. **일정 지연 위험**
-   - 대응: 주간 진행 상황 점검 및 이슈 조기 발견 시스템 구축
-   - 대응: 핵심 기능 우선 개발 후 부가 기능은 단계적 출시
-
-2. **기술적 어려움**
-   - 대응: 사전 기술 검증 및 프로토타입 개발
-   - 대응: 외부 전문가 자문 필요시 즉시 활용
-
-3. **이해관계자 요구사항 변경**
-   - 대응: 초기 요구사항 명확화 및 문서화
-   - 대응: 변경 관리 프로세스 수립
-
-## 8. 성공 기준
-
-- 웹사이트 방문자 수 30% 증가
-- 페이지 체류 시간 25% 증가
-- 모바일 사용자 이탈률 40% 감소
-- 검색 엔진 순위 상위 10위 내 진입 (주요 키워드 기준)
-- 고객 문의 및 리드 생성 35% 증가
-
-## 9. 승인
-
-본 프로젝트 계획서는 관련 부서 및 경영진의 검토와 승인을 거쳐 실행됩니다.`,
-  },
-  {
-    id: 2,
-    title: "마케팅 전략",
-    category: "전략",
-    lastUpdated: "1일 전",
-    author: "이영희",
-    content: "마케팅 전략에 대한 상세 내용입니다...",
-  },
-  {
-    id: 3,
-    title: "분기별 보고서",
-    category: "보고서",
-    lastUpdated: "3일 전",
-    author: "박지민",
-    content: "분기별 보고서에 대한 상세 내용입니다...",
-  },
-  {
-    id: 4,
-    title: "사용자 연구 결과",
-    category: "연구",
-    lastUpdated: "5시간 전",
-    author: "최수진",
-    content: "사용자 연구 결과에 대한 상세 내용입니다...",
-  },
-  {
-    id: 5,
-    title: "제품 명세서",
-    category: "명세",
-    lastUpdated: "1일 전",
-    author: "정민준",
-    content: "제품 명세서에 대한 상세 내용입니다...",
-  },
-  {
-    id: 6,
-    title: "회의록 - 개발팀",
-    category: "회의록",
-    lastUpdated: "1주일 전",
-    author: "강다희",
-    content: "개발팀 회의록에 대한 상세 내용입니다...",
-  },
-  {
-    id: 7,
-    title: "디자인 가이드라인",
-    category: "가이드",
-    lastUpdated: "2일 전",
-    author: "윤서연",
-    content: "디자인 가이드라인에 대한 상세 내용입니다...",
-  },
-  {
-    id: 8,
-    title: "API 문서",
-    category: "문서",
-    lastUpdated: "3일 전",
-    author: "임재현",
-    content: "API 문서에 대한 상세 내용입니다...",
-  },
-]
-
-// 실제 UI 및 로직을 담당하는 내부 컴포넌트
-function InnerDashboard() {
-  const { activeIconMenu, setActiveIconMenu } = useSidebar();
-  
-  const [documentEditorOpen, setDocumentEditorOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [reportsOpen, setReportsOpen] = useState(false);
-  const [selectedDocument, setSelectedDocument] = useState<(typeof documentsData)[0] | null>(null);
-
-  useEffect(() => {
-    // --- 테스트를 위해 다음 라인 활성화 ---
-    // setActiveIconMenu("Editor"); 
-    // --- 테스트가 끝나면 원래 로직으로 돌려놓거나 아래 로직과 병합 ---
-
-    const isEditorActive = activeIconMenu === 'Editor';
-    const isSettingsActive = activeIconMenu === 'Settings';
-    const isReportsActive = activeIconMenu === 'Reports';
-    const isDocumentViewActive = activeIconMenu === 'DocumentView';
-
-    setDocumentEditorOpen(isEditorActive);
-    setSettingsOpen(isSettingsActive);
-    setReportsOpen(isReportsActive);
-    
-    if (!isDocumentViewActive && activeIconMenu !== "Documents" && activeIconMenu !== "Projects") { 
-      setSelectedDocument(null);
-    }
-
-    // --- 테스트 중에는 이 기본 뷰 설정 로직을 주석 처리하거나 비활성화 ---
-    /*
-    const noSpecificViewActive = !isEditorActive && !isSettingsActive && !isReportsActive && !isDocumentViewActive && !selectedDocument;
-    if (noSpecificViewActive) {
-      if (activeIconMenu !== 'Calendar' && activeIconMenu) {
-      } else if (!activeIconMenu || activeIconMenu !== 'Calendar') {
-        setActiveIconMenu("Calendar");
-      }
-    }
-    */
-  }, [activeIconMenu, settingsOpen, documentEditorOpen, reportsOpen, selectedDocument, setActiveIconMenu]);
-
-  const handleDocumentClick = (doc: (typeof documentsData)[0]) => {
-    setSelectedDocument(doc);
-    setActiveIconMenu("DocumentView");
-  };
-
-  const handleOpenDocumentEditor = () => {
-    setActiveIconMenu("Editor");
-  };
-  
-  const closeViewAndGoToCalendar = () => {
-    setActiveIconMenu("Calendar");
-  };
-
-  return (
-    <PanelManager
-      documentsData={documentsData} 
-      handleDocumentClick={handleDocumentClick}
-      onOpenDocumentEditor={handleOpenDocumentEditor} 
-    >
-      <div className="py-10 px-4 sm:px-6 lg:px-8">
-        {settingsOpen ? (
-          <SettingsView onClose={closeViewAndGoToCalendar} />
-        ) : documentEditorOpen ? (
-          <RichTextEditorView onClose={closeViewAndGoToCalendar} />
-        ) : activeIconMenu === 'Calendar' ? (
-          <CalendarView onCreateDocument={handleOpenDocumentEditor} />
-        ) : reportsOpen ? (
-          <ReportsView onClose={closeViewAndGoToCalendar} />
-        ) : activeIconMenu === "DocumentView" && selectedDocument ? (
-           <DocumentViewer document={selectedDocument} onClose={closeViewAndGoToCalendar} />
-        ) : (
-          <div className="bg-white p-6 rounded-lg shadow-sm dark:bg-gray-800">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4 dark:text-white">대시보드 홈</h1>
-            <p className="text-gray-600 dark:text-gray-300">
-              왼쪽 메뉴를 통해 기능을 선택해주세요. (현재 활성: {activeIconMenu || '없음'})
-            </p>
-          </div>
-        )}
-      </div>
-    </PanelManager>
-  );
+function classNames(...classes: string[]) {
+  return classes.filter(Boolean).join(" ")
 }
 
-// 최상위 Dashboard 컴포넌트는 Provider들로 감싸는 역할만 수행
-export default function Dashboard() {
-  const [isClient, setIsClient] = useState(false);
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+interface Document {
+  id: number;
+  title: string;
+  category: string;
+  author: string;
+  lastUpdated: string;
+  content: string;
+}
 
-  if (!isClient) {
-    // 서버 사이드 렌더링 시에는 Context를 사용할 수 없으므로 로딩 상태나 null 반환
-    return null; 
+export default function Dashboard() {
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  // 사이드바 상태 저장을 위한 로컬 스토리지 키 추가
+  const SIDEBAR_STATE_KEY = "dashboard_sidebar_collapsed"
+
+  // useState 초기값을 로컬 스토리지에서 가져오도록 수정
+  const [collapsed, setCollapsed] = useState(() => {
+    if (typeof window !== "undefined") {
+      const savedState = localStorage.getItem(SIDEBAR_STATE_KEY)
+      return savedState ? JSON.parse(savedState) : false
+    }
+    return false
+  })
+  const [activeNavItem, setActiveNavItem] = useState("Calendar")
+  const [projectPanelOpen, setProjectPanelOpen] = useState(false)
+  const [documentPanelOpen, setDocumentPanelOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [documentEditorOpen, setDocumentEditorOpen] = useState(false)
+  const [calendarOpen, setCalendarOpen] = useState(false)
+  const [reportsOpen, setReportsOpen] = useState(false)
+  const [documentArchiveOpen, setDocumentArchiveOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [selectedDocument, setSelectedDocument] = useState<Document | null>(null)
+
+  // 문서 데이터 정의
+  const documents: Document[] = [
+    {
+      id: 1,
+      title: "Initial Draft",
+      category: "Blog Post",
+      author: "John Doe",
+      lastUpdated: "2023-01-15",
+      content: "This is the content of the initial draft.",
+    },
+    {
+      id: 2,
+      title: "Marketing Plan",
+      category: "Strategy",
+      author: "Jane Smith",
+      lastUpdated: "2023-02-20",
+      content: "This is the content of the marketing plan.",
+    },
+    {
+      id: 3,
+      title: "Project Proposal",
+      category: "Proposals",
+      author: "Mike Johnson",
+      lastUpdated: "2023-03-10",
+      content: "This is the content of the project proposal.",
+    },
+  ]
+
+  // toggleSidebar 함수 수정하여 로컬 스토리지에 상태 저장
+  const toggleSidebar = () => {
+    const newState = !collapsed
+    setCollapsed(newState)
+    if (typeof window !== "undefined") {
+      localStorage.setItem(SIDEBAR_STATE_KEY, JSON.stringify(newState))
+    }
   }
 
+  // 모바일 화면에서 사이드바 자동으로 닫기
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 1024 && sidebarOpen) {
+        setSidebarOpen(false)
+      }
+    }
+
+    window.addEventListener("resize", handleResize)
+    return () => window.removeEventListener("resize", handleResize)
+  }, [sidebarOpen])
+
+  const handleNavItemClick = (item: typeof navigation[0]) => {
+    setActiveNavItem(item.name)
+    if (item.hasPanel) {
+      if (item.name === "Documents") {
+        setDocumentPanelOpen(!documentPanelOpen)
+        setProjectPanelOpen(false)
+      } else if (item.name === "Projects") {
+        setProjectPanelOpen(!projectPanelOpen)
+        setDocumentPanelOpen(false)
+      }
+    } else {
+      setProjectPanelOpen(false)
+      setDocumentPanelOpen(false)
+
+      // 해당 메뉴에 맞는 콘텐츠 표시
+      if (item.name === "Calendar") {
+        setCalendarOpen(true)
+        setReportsOpen(false)
+        setSettingsOpen(false)
+        setDocumentEditorOpen(false)
+      } else if (item.name === "Reports") {
+        setReportsOpen(true)
+        setCalendarOpen(false)
+        setSettingsOpen(false)
+        setDocumentEditorOpen(false)
+      }
+    }
+  }
+
+  const handleDocumentClick = (doc: Document) => {
+    setSelectedDocument(doc)
+    setDocumentArchiveOpen(false)
+  }
+
+  const filteredDocuments = documents.filter((doc) => doc.title.toLowerCase().includes(searchQuery.toLowerCase()))
+
+  // 사이드바 너비 변수 수정
+  const sidebarWidth = collapsed ? "4.5rem" : "16rem"
+  const projectPanelWidth = "22.4rem"
+
+  // 문서 에디터 대체 컴포넌트
+
   return (
-    <DashboardLayoutWithProvider>
-      <SearchProvider projectsData={projectsData} documentsData={documentsData}>
-        <InnerDashboard />
-      </SearchProvider>
-    </DashboardLayoutWithProvider>
-  );
-}
+    <>
+      <div>
+        {/* 모바일 사이드바 */}
+        {sidebarOpen && (
+          <div className="fixed inset-0 z-50 lg:hidden">
+            <div className="fixed inset-0 bg-gray-900/80" onClick={() => setSidebarOpen(false)} />
+            <div className="fixed inset-y-0 left-0 flex w-full max-w-xs flex-1">
+              <div className="relative mr-16 flex w-full max-w-xs flex-1">
+                <div className="absolute left-full top-0 flex w-16 justify-center pt-5">
+                  <button type="button" className="-m-2.5 p-2.5" onClick={() => setSidebarOpen(false)}>
+                    <span className="sr-only">Close sidebar</span>
+                    <X className="size-6 text-white" aria-hidden="true" />
+                  </button>
+                </div>
+                {/* Sidebar component, swap this element with another sidebar if you like */}
+                <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white px-6 pt-10 pb-4">
+                  <div className="flex h-2 shrink-0 items-center">{/* 로고 제거됨, 마진 유지 */}</div>
+                  <nav className="flex flex-1 flex-col">
+                    <ul role="list" className="flex flex-1 flex-col gap-y-7">
+                      <li>
+                        <ul role="list" className="-mx-2 space-y-1">
+                          {navigation.map((item) => (
+                            <li key={item.name}>
+                              <a
+                                href={item.href}
+                                onClick={(e) => {
+                                  e.preventDefault()
+                                  handleNavItemClick(item)
+                                  setSidebarOpen(false)
+                                }}
+                                className={classNames(
+                                  activeNavItem === item.name
+                                    ? "bg-selected-item-bg text-selected-item-text"
+                                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                                  item.hasPanel && (item.name === "Documents" ? documentPanelOpen : projectPanelOpen)
+                                    ? "bg-sidebar-accent text-sidebar-foreground"
+                                    : "",
+                                  "group flex items-center rounded-xl p-3 text-sm/6 font-medium transition-all duration-200 gap-x-5",
+                                )}
+                              >
+                                <item.icon
+                                  className={classNames(
+                                    activeNavItem === item.name
+                                      ? "text-selected-item-text"
+                                      : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground",
+                                    item.hasPanel && (item.name === "Documents" ? documentPanelOpen : projectPanelOpen)
+                                      ? "text-sidebar-foreground"
+                                      : "",
+                                    "size-5 shrink-0",
+                                  )}
+                                />
+                                <span className="truncate">{item.name}</span>
+                              </a>
+                            </li>
+                          ))}
+                        </ul>
+                      </li>
+                      <li className="mt-auto">
+                        <a
+                          href="#"
+                          className="group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold text-gray-700 hover:bg-gray-50 hover:text-indigo-600"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            setSettingsOpen(true)
+                            setSidebarOpen(false)
+                          }}
+                        >
+                          <Settings
+                            aria-hidden="true"
+                            className="h-6 w-6 shrink-0 text-gray-400 group-hover:text-indigo-600"
+                          />
+                          Settings
+                        </a>
+                      </li>
+                    </ul>
+                  </nav>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 데스크톱 사이드바 */}
+        <div
+          className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:flex-col transition-all duration-300"
+          style={{ width: sidebarWidth }}
+        >
+          {/* Sidebar component, swap this element with another sidebar if you like */}
+          <div className="flex grow flex-col gap-y-2 overflow-y-auto border-r border-gray-100 bg-sidebar-background pb-4 pt-10 rounded-r-3xl relative shadow-lg z-20">
+            <nav className="flex flex-1 flex-col">
+              <ul role="list" className="flex flex-1 flex-col gap-y-7 px-2">
+                <li>
+                  <ul role="list" className="-mx-2 space-y-1">
+                    {navigation.map((item) => (
+                      <li key={item.name}>
+                        <a
+                          href={item.href}
+                          onClick={(e) => {
+                            e.preventDefault()
+                            handleNavItemClick(item)
+                          }}
+                          className={classNames(
+                            activeNavItem === item.name
+                              ? "bg-selected-item-bg text-selected-item-text"
+                              : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                            item.hasPanel && (item.name === "Documents" ? documentPanelOpen : projectPanelOpen)
+                              ? "bg-sidebar-accent text-sidebar-foreground"
+                              : "",
+                            "group flex items-center rounded-xl p-3 text-sm/6 font-medium transition-all duration-200",
+                            collapsed ? "justify-center px-3" : "gap-x-5",
+                          )}
+                        >
+                          <item.icon
+                            className={classNames(
+                              activeNavItem === item.name
+                                ? "text-selected-item-text"
+                                : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground",
+                              item.hasPanel && (item.name === "Documents" ? documentPanelOpen : projectPanelOpen)
+                                ? "text-sidebar-foreground"
+                                : "",
+                              "size-5 shrink-0",
+                            )}
+                          />
+                          {!collapsed && <span className="truncate">{item.name}</span>}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </li>
+                <li className="mt-auto">
+                  <a
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      setSettingsOpen(true)
+                      setDocumentEditorOpen(false)
+                      setCalendarOpen(false)
+                      setReportsOpen(false)
+                    }}
+                    className={classNames(
+                      "group flex items-center rounded-xl p-3 text-sm/6 font-medium text-sidebar-foreground hover:bg-sidebar-accent",
+                      collapsed ? "justify-center px-3" : "gap-x-5",
+                    )}
+                  >
+                    <Settings
+                      aria-hidden="true"
+                      className="size-5 shrink-0 text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
+                    />
+                    {!collapsed && <span className="truncate">Settings</span>}
+                  </a>
+                </li>
+              </ul>
+            </nav>
+          </div>
+        </div>
+
+        {/* 토글 버튼 - 대시보드와 콘텐츠 사이에 위치 */}
+        <div
+          className="fixed left-0 top-1/2 -translate-y-1/2 z-[100] hidden lg:block transition-all duration-300"
+          style={{ left: collapsed ? "3.5rem" : "15rem" }}
+        >
+          <button
+            onClick={toggleSidebar}
+            className="p-2 rounded-full bg-white hover:bg-gray-50 transition-colors shadow-lg border border-gray-200"
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {collapsed ? (
+              <PanelLeftOpen className="size-5 text-gray-700" />
+            ) : (
+              <PanelLeftClose className="size-5 text-gray-700" />
+            )}
+          </button>
+        </div>
+
+        {/* 문서 패널 */}
+        {documentPanelOpen && (
+          <div
+            className="hidden lg:block border-r border-gray-100 bg-white overflow-y-auto h-screen fixed top-0 z-50 transition-all duration-300"
+            style={{ left: sidebarWidth, width: projectPanelWidth }}
+          >
+            <div className="p-4 pt-16">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-gray-900">문서</h2>
+                <button onClick={() => setDocumentPanelOpen(false)} className="rounded-full p-1 hover:bg-gray-100">
+                  <X className="size-5 text-gray-500" />
+                </button>
+              </div>
+
+              {/* Document Actions */}
+              <div className="flex gap-2 mb-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDocumentEditorOpen(true)
+                    setSettingsOpen(false)
+                    setCalendarOpen(false)
+                    setReportsOpen(false)
+                    setDocumentPanelOpen(false)
+                  }}
+                  className="flex-1 rounded-xl bg-black px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-gray-800 flex items-center justify-center gap-2"
+                >
+                  <Plus className="size-4" />새 문서 작성
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDocumentArchiveOpen(true)}
+                  className="flex-1 rounded-xl bg-white px-3 py-2 text-sm font-medium text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 hover:bg-gray-50 flex items-center justify-center gap-2"
+                >
+                  <Archive className="size-4" />
+                  아카이브
+                </button>
+              </div>
+
+              {/* Recent Documents */}
+              <div className="mt-10">
+                <h3 className="text-sm font-medium text-gray-500 mb-2">최근 문서</h3>
+                <div className="grid grid-cols-1 gap-3">
+                  {documents.slice(0, 3).map((doc) => (
+                    <div
+                      key={doc.id}
+                      className="group rounded-xl border border-gray-100 bg-white p-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                      onClick={() => {
+                        setSelectedDocument(doc)
+                        setDocumentPanelOpen(false)
+                      }}
+                    >
+                      <h3 className="text-sm font-medium text-gray-900 group-hover:text-black truncate">{doc.title}</h3>
+                      <div className="mt-1 flex items-center justify-between text-xs text-gray-500">
+                        <span>{doc.category}</span>
+                        <span>{doc.lastUpdated}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 문서 아카이브 다이얼로그 */}
+        <Dialog open={documentArchiveOpen} onOpenChange={setDocumentArchiveOpen}>
+          <DialogContent className="max-w-4xl w-full max-h-[80vh] flex flex-col rounded-2xl">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="text-lg font-bold text-gray-900">문서 아카이브</h2>
+              <button onClick={() => setDocumentArchiveOpen(false)} className="rounded-full p-1 hover:bg-gray-100">
+                <X className="size-5 text-gray-500" />
+              </button>
+            </div>
+
+            {/* Search */}
+            <div className="p-4 border-b">
+              <div className="relative">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                  <Search className="size-4 text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="문서 검색..."
+                  className="block w-full rounded-xl border-0 py-2 pl-10 text-sm text-gray-900 ring-1 ring-inset ring-gray-200 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-black"
+                />
+              </div>
+            </div>
+
+            {/* Document List */}
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {filteredDocuments.length > 0 ? (
+                  filteredDocuments.map((doc) => (
+                    <div
+                      key={doc.id}
+                      className="group rounded-xl border border-gray-100 bg-white p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                      onClick={() => handleDocumentClick(doc)}
+                    >
+                      <div className="flex items-start justify-between">
+                        <h3 className="text-sm font-medium text-gray-900 group-hover:text-black truncate">
+                          {doc.title}
+                        </h3>
+                        <span className="inline-flex rounded-full px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-800">
+                          {doc.category}
+                        </span>
+                      </div>
+                      <div className="mt-2 flex items-center justify-between text-xs text-gray-500">
+                        <span>{doc.author}</span>
+                        <span>{doc.lastUpdated}</span>
+                      </div>
+                      <div className="relative opacity-0 group-hover:opacity-100 focus-within:opacity-100 mt-2 text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger className="inline-flex items-center rounded-full p-1.5 text-gray-500 hover:text-gray-600">
+                            <span className="sr-only">옵션 열기</span>
+                            <MoreVertical className="size-6" aria-hidden="true" />
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-36">
+                            <DropdownMenuItem className="cursor-pointer">문서 보기</DropdownMenuItem>
+                            <DropdownMenuItem className="cursor-pointer">편집</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-4 text-sm text-gray-500 col-span-2">검색 결과가 없습니다.</div>
+                )}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* 문서 패널이 열릴 때 나타나는 오버레이 */}
+        {documentPanelOpen && (
+          <div className="fixed inset-0 bg-gray-500/3 z-45 hidden lg:block" style={{ pointerEvents: "none" }} />
+        )}
+
+        {/* 메인 콘텐츠 영역 */}
+        <div
+          className={`flex-1 overflow-y-auto bg-background z-30 relative transition-all duration-300 ${
+            documentPanelOpen ? "after:absolute after:inset-0 after:bg-gray-500/3 after:z-40" : ""
+          }`}
+          style={{ marginLeft: typeof window !== "undefined" && window.innerWidth > 1024 ? sidebarWidth : 0 }}
+        >
+          {/* 콘텐츠 영역 내 Header 추가 */}
+          <header className="sticky top-0 z-30 bg-background border-b border-gray-100 shadow-xs">
+            <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
+              <button
+                type="button"
+                onClick={() => setSidebarOpen(true)}
+                className="-m-2.5 p-2.5 text-gray-700 lg:hidden"
+              >
+                <span className="sr-only">Open sidebar</span>
+                <MenuIcon aria-hidden="true" className="size-6" />
+              </button>
+
+              <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
+                <form action="#" method="GET" className="relative flex items-center w-[32rem] max-w-full">
+                  <input
+                    name="search"
+                    type="search"
+                    placeholder="Search"
+                    aria-label="Search"
+                    className="h-10 w-full bg-white pl-10 pr-4 text-sm text-gray-900 outline-hidden placeholder:text-gray-400 rounded-full border border-gray-200"
+                  />
+                  <Search
+                    aria-hidden="true"
+                    className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400"
+                  />
+                </form>
+                <div className="flex items-center gap-x-4 lg:gap-x-6 ml-auto mr-2.5">
+                  <button type="button" className="-m-2.5 p-2.5 text-gray-400 hover:text-gray-500">
+                    <span className="sr-only">View notifications</span>
+                    <Bell aria-hidden="true" className="size-6" />
+                  </button>
+
+                  {/* Separator */}
+                  <div aria-hidden="true" className="hidden lg:block lg:h-6 lg:w-px lg:bg-gray-200" />
+
+                  {/* Profile dropdown */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger className="flex items-center p-1.5 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer">
+                      <span className="sr-only">Open user menu</span>
+                      <img
+                        alt=""
+                        src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+                        className="size-8 rounded-full bg-gray-50"
+                      />
+                      <span className="hidden lg:flex lg:items-center pointer-events-none">
+                        <span aria-hidden="true" className="ml-4 text-sm/6 font-semibold text-gray-900">
+                          Tom Cook
+                        </span>
+                        <ChevronDown aria-hidden="true" className="ml-2 size-5 text-gray-400" />
+                      </span>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="end"
+                      className="rounded-xl w-48 z-[100] shadow-lg border border-gray-200"
+                    >
+                      <DropdownMenuItem
+                        className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                        onClick={() => {
+                          setSettingsOpen(true)
+                          setDocumentEditorOpen(false)
+                          setCalendarOpen(false)
+                          setReportsOpen(false)
+                        }}
+                      >
+                        <Settings className="size-4" />
+                        <span>Settings</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 cursor-pointer">
+                        <LogOut className="size-4" />
+                        <span>Logout</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
+            </div>
+          </header>
+
+          <div className="py-10 px-4 sm:px-6 lg:px-8">
+            {settingsOpen ? (
+              <div key="settings">
+                <SettingsComponent onClose={() => setSettingsOpen(false)} />
+              </div>
+            ) : documentEditorOpen ? (
+              <div key="document-editor">
+                <div className="mb-4 flex justify-between items-center">
+                  <h1 className="text-2xl font-bold text-gray-900">새 문서 작성</h1>
+                  <Button variant="outline" onClick={() => setDocumentEditorOpen(false)} className="rounded-xl">
+                    돌아가기
+                  </Button>
+                </div>
+                <div className="bg-white p-6 rounded-2xl shadow-sm">
+                  <RichTextEditor />
+                </div>
+              </div>
+            ) : calendarOpen ? (
+              <div key="calendar">
+                <div className="mb-4 flex justify-between items-center">
+                  <h1 className="text-2xl font-bold text-gray-900">문서 발행 일정</h1>
+                  <Button variant="outline" onClick={() => setCalendarOpen(false)} className="rounded-xl">
+                    돌아가기
+                  </Button>
+                </div>
+                <CalendarComponent
+                  documents={documents.map((doc) => ({
+                    id: doc.id,
+                    title: doc.title,
+                    author: {
+                      name: doc.author,
+                      imageUrl:
+                        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
+                    },
+                    category: doc.category,
+                    publishDatetime: `${doc.lastUpdated}T12:00:00`,
+                    publishDate: doc.lastUpdated,
+                    status: "published",
+                  }))}
+                  onCreateDocument={() => {
+                    setDocumentEditorOpen(true)
+                    setCalendarOpen(false)
+                  }}
+                />
+              </div>
+            ) : reportsOpen ? (
+              <div key="reports">
+                <div className="mb-4 flex justify-between items-center">
+                  <h1 className="text-2xl font-bold text-gray-900">웹사이트 분석 보고서</h1>
+                  <Button variant="outline" onClick={() => setReportsOpen(false)} className="rounded-xl">
+                    돌아가기
+                  </Button>
+                </div>
+                <div className="bg-white p-6 rounded-2xl shadow-sm">
+                  <p>보고서가 여기에 표시됩니다.</p>
+                </div>
+              </div>
+            ) : (
+              <div key="dashboard">
+                <div className="bg-white p-6 rounded-2xl shadow-sm">
+                  <h1 className="text-2xl font-bold text-gray-900 mb-4">대시보드 콘텐츠</h1>
+                  <p className="text-gray-600">
+                    왼쪽 상단의 화살표 버튼을 클릭하여 사이드바를 접거나 펼칠 수 있습니다.
+                  </p>
+                  <p className="text-gray-600 mt-2">프로젝트 메뉴를 클릭하면 프로젝트 패널이 표시됩니다.</p>
+                </div>
+              </div>
+            )}
+
+            {/* 선택된 문서가 있을 때 DocumentViewer 컴포넌트 렌더링 */}
+            {selectedDocument && (
+              <div className="mt-4 bg-white p-6 rounded-2xl shadow-sm">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold">{selectedDocument.title}</h2>
+                  <Button variant="outline" onClick={() => setSelectedDocument(null)} className="rounded-xl">
+                    닫기
+                  </Button>
+                </div>
+                <div className="flex items-center text-sm text-gray-500 mb-4">
+                  <span className="mr-4">작성자: {selectedDocument.author}</span>
+                  <span>마지막 수정: {selectedDocument.lastUpdated}</span>
+                </div>
+                <div className="prose max-w-none">
+                  <p>{selectedDocument.content}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </>
+  )
+} 

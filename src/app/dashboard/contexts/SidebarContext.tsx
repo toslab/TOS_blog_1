@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, Dispatch, SetStateAction } from 'react';
 import { LucideIcon, Home, Briefcase, Settings, Users, FileText, Folder, LogOut, BarChart3, Calendar } from 'lucide-react';
-import { SubMenuItem } from '../components/common/ListItem';
+import { SubMenuItem } from '../../../features/dashboard/common/ListItem';
 
 export interface IconNavItem {
   name: string;

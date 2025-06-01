@@ -1,9 +1,8 @@
 import { type Metadata } from 'next'
 
 import { Providers } from '@/app/providers'
-import { Layout } from '@/components/Layout'
 
-import '@/styles/tailwind.css'
+import '@/app/globals.css'
 
 export const metadata: Metadata = {
   title: {
@@ -25,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className="h-full antialiased" suppressHydrationWarning>
+    <html lang="ko" className="h-full antialiased" suppressHydrationWarning>
       <body className="h-full">
         <Providers>
           {/* dashboard 외부 경로에만 Layout 사용 (children에게 판단 위임) */}

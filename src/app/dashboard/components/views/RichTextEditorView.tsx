@@ -1,7 +1,7 @@
 'use client';
 
 import RichTextEditor from '../rich-text-editor'; // 새로 리팩토링된 RichTextEditor를 사용
-import { Button } from "@/components/Button"; // Button 컴포넌트 사용을 위해 import
+import { Button } from "@/components/common/Button"; // Button 컴포넌트 사용을 위해 import
 
 interface RichTextEditorViewProps {
   onClose: () => void; // 에디터를 닫는 콜백 함수

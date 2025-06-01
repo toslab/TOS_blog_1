@@ -3,7 +3,7 @@
 import React from 'react';
 import { ChevronLeft, FileText, Folder, Settings, Users } from 'lucide-react'; // 예시 아이콘
 import { cn } from '@/lib/utils';
-import ListItem, { SubMenuItem } from '../common/ListItem'; // ListItem 컴포넌트 임포트 (경로 확인 필요)
+import ListItem, { SubMenuItem } from '../../../../features/dashboard/common/ListItem'; // ListItem 컴포넌트 임포트 (경로 확인 필요)
 
 // TODO: 실제 네비게이션 아이템 데이터로 교체해야 합니다. (SidebarContext 또는 props로 전달받을 수 있음)
 // 이 데이터 구조는 SidebarContext와 연동되어야 합니다.

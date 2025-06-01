@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/components/Button"
+import { Button } from "@/components/common/Button"
 import { marked } from "marked"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/dashboard_UI/dialog"
 

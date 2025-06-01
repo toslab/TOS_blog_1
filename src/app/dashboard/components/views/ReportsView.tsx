@@ -1,7 +1,7 @@
 'use client';
 
 import Reports from '../reports'; // 기존 Reports 컴포넌트 사용
-import { Button } from "@/components/Button"; // Button 컴포넌트 사용을 위해 import
+import { Button } from "@/components/common/Button"; // Button 컴포넌트 사용을 위해 import
 
 interface ReportsViewProps {
   onClose: () => void; // 보고서 뷰를 닫는 콜백 함수

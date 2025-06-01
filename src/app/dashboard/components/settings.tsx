@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState, useRef } from "react"
-import { Button } from "@/components/Button"
+import { Button } from "@/components/common/Button"
 import { Input } from "@/components/dashboard_UI/input"
 import { Label } from "@/components/dashboard_UI/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/dashboard_UI/tabs"

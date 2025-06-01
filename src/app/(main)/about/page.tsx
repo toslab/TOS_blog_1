@@ -3,13 +3,13 @@ import Image from 'next/image'
 import Link from 'next/link'
 import clsx from 'clsx'
 
-import { Container } from '@/components/Container'
+import { Container } from '@/components/layouts/Container'
 import {
   GitHubIcon,
   InstagramIcon,
   LinkedInIcon,
   XIcon,
-} from '@/components/SocialIcons'
+} from '@/components/common/SocialIcons'
 import portraitImage from '@/images/portrait.jpg'
 
 function SocialLink({
