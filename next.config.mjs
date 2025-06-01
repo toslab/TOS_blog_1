@@ -15,11 +15,10 @@ const nextConfig = {
   },
   transpilePackages: ["@radix-ui"],
   pageExtensions: ['js', 'jsx', 'ts', 'tsx', 'mdx'],
-  experimental: {
-    outputFileTracingIncludes: {
-      '/articles/*': ['./src/app/articles/**/*.mdx'],
-    },
+  outputFileTracingIncludes: {
+    '/articles/*': ['./src/app/articles/**/*.mdx'],
   },
+  experimental: {},
 }
 
 const withMDX = nextMDX({

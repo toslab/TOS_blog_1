@@ -12,8 +12,8 @@ import {
   PopoverPanel,
 } from '@headlessui/react'
 import clsx from 'clsx'
-import { LoginButton } from '@/components/loginandout/LoginButton'
-import { ProfileButton } from '@/components/loginandout/ProfileButton'
+import { LoginButton } from '@/components/common/loginandout/LoginButton'
+import { ProfileButton } from '@/components/common/loginandout/ProfileButton'
 import { useSession } from 'next-auth/react'
 
 import { Container } from '@/components/layouts/Container'

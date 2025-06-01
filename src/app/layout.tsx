@@ -2,7 +2,7 @@ import { type Metadata } from 'next'
 
 import { Providers } from '@/app/providers'
 
-import '@/app/globals.css'
+import '@/styles/main/main.css' 
 
 export const metadata: Metadata = {
   title: {

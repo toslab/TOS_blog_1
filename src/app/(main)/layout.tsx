@@ -1,4 +1,4 @@
-import { Layout } from '@/components/Layout'
+import { Layout } from '@/components/layouts/MainSiteLayout'
 
 export default function MainLayout({
   children,
