@@ -1,70 +1,110 @@
-'use client'
+// lib/articles.ts
+import glob from 'fast-glob'
+import fs from 'fs'
+import path from 'path'
 
-import { useContext } from 'react'
-import { useRouter } from 'next/navigation'
-
-import { AppContext } from '@/app/providers'
-import { Container } from '@/components/layouts/Container'
-import { Prose } from '@/components/common/Prose'
-import { type ArticleWithSlug } from '@/lib/articles'
-import { formatDate } from '@/lib/formatDate'
-
-function ArrowLeftIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
-  return (
-    <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" {...props}>
-      <path
-        d="M7.25 11.25 3.75 8m0 0 3.5-3.25M3.75 8h8.5"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
+interface Article {
+  title: string
+  description: string
+  author: string
+  date: string
+  tags: string[] // 태그 필드 추가
 }
 
-export function ArticleLayout({
-  article,
-  children,
-}: {
-  article: ArticleWithSlug
-  children: React.ReactNode
-}) {
-  let router = useRouter()
-  let { previousPathname } = useContext(AppContext)
+export interface ArticleWithSlug extends Article {
+  slug: string
+}
 
-  return (
-    <Container className="mt-16 lg:mt-32">
-      <div className="xl:relative">
-        <div className="mx-auto max-w-2xl">
-          {previousPathname && (
-            <button
-              type="button"
-              onClick={() => router.back()}
-              aria-label="Go back to articles"
-              className="group mb-8 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md ring-1 shadow-zinc-800/5 ring-zinc-900/5 transition lg:absolute lg:-left-5 lg:-mt-2 lg:mb-0 xl:-top-1.5 xl:left-0 xl:mt-0 dark:border dark:border-zinc-700/50 dark:bg-zinc-800 dark:ring-0 dark:ring-white/10 dark:hover:border-zinc-700 dark:hover:ring-white/20"
-            >
-              <ArrowLeftIcon className="h-4 w-4 stroke-zinc-500 transition group-hover:stroke-zinc-700 dark:stroke-zinc-500 dark:group-hover:stroke-zinc-400" />
-            </button>
-          )}
-          <article>
-            <header className="flex flex-col">
-              <h1 className="mt-6 text-4xl font-bold tracking-tight text-zinc-800 sm:text-5xl dark:text-zinc-100">
-                {article.title}
-              </h1>
-              <time
-                dateTime={article.date}
-                className="order-first flex items-center text-base text-zinc-400 dark:text-zinc-500"
-              >
-                <span className="h-4 w-0.5 rounded-full bg-zinc-200 dark:bg-zinc-500" />
-                <span className="ml-3">{formatDate(article.date)}</span>
-              </time>
-            </header>
-            <Prose className="mt-8" data-mdx-content>
-              {children}
-            </Prose>
-          </article>
-        </div>
-      </div>
-    </Container>
+async function importArticle(
+  articleFilename: string,
+): Promise<ArticleWithSlug> {
+  let { article } = (await import(`../../app/(main)/articles/${articleFilename}`)) as {
+    default: React.ComponentType
+    article: Article
+  }
+
+  return {
+    slug: articleFilename.replace(/(\/page)?\.mdx$/, ''),
+    ...article,
+    tags: article.tags || [] // 태그가 없는 경우 빈 배열로 설정
+  }
+}
+
+const articlesDirectory = path.join(process.cwd(), 'src/app/(main)/articles') // 경로 확인!
+
+export async function getAllArticles() {
+  let articleFilenames = await glob('*/page.mdx', {
+    cwd: './src/app/(main)/articles',
+  })
+  console.log('Found article filenames:', articleFilenames) // 파일 목록 확인
+
+  if (articleFilenames.length === 0) {
+    console.log('No article files found in ./src/app/(main)/articles/')
+    return [] // 파일이 없으면 빈 배열 반환
+  }
+
+  let articles = await Promise.all(
+    articleFilenames.map(async (filename) => {
+      try {
+        return await importArticle(filename)
+      } catch (error) {
+        console.error(`Error importing article ${filename}:`, error)
+        return null // 오류 발생 시 null 반환
+      }
+    })
   )
+
+  articles = articles.filter(article => article !== null) // null 제거
+  console.log('Processed articles:', articles) // 처리된 아티클 객체 목록 확인
+
+  return articles.sort((a, z) => +new Date(z.date) - +new Date(a.date))
+}
+
+export async function getArticle(
+  articleFilename: string,
+): Promise<ArticleWithSlug> {
+  let { article } = (await import(`../../app/(main)/articles/${articleFilename}`)) as {
+    default: React.ComponentType
+    article: Article
+  }
+
+  return {
+    slug: articleFilename.replace(/(\/page)?\.mdx$/, ''),
+    ...article,
+    tags: article.tags || [] // 태그가 없는 경우 빈 배열로 설정
+  }
+}
+
+// 추가 유틸리티 함수들
+
+// 모든 고유한 태그 가져오기
+export async function getAllTags(): Promise<string[]> {
+  const articles = await getAllArticles()
+  const tagSet = new Set<string>()
+  
+  articles.forEach(article => {
+    article.tags?.forEach(tag => tagSet.add(tag))
+  })
+  
+  return Array.from(tagSet).sort()
+}
+
+// 특정 태그를 가진 글들만 가져오기
+export async function getArticlesByTag(tag: string): Promise<ArticleWithSlug[]> {
+  const articles = await getAllArticles()
+  return articles.filter(article => article.tags?.includes(tag))
+}
+
+// 태그별 글 개수 가져오기
+export async function getTagCounts(): Promise<Record<string, number>> {
+  const articles = await getAllArticles()
+  const tagCounts: Record<string, number> = {}
+  
+  articles.forEach(article => {
+    article.tags?.forEach(tag => {
+      tagCounts[tag] = (tagCounts[tag] || 0) + 1
+    })
+  })
+  
+  return tagCounts
 }

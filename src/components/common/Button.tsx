@@ -3,7 +3,7 @@
 import React, { ButtonHTMLAttributes, ReactNode, AnchorHTMLAttributes } from 'react';
 import Link from 'next/link';
 import { VariantProps, cva } from 'class-variance-authority';
-import { cn } from '@/utils/cn';
+import { cn } from '@/lib/utils'
 
 // 버튼 기본 스타일 정의
 const buttonVariants = cva(
@@ -43,14 +43,15 @@ export interface ButtonProps
   className?: string;
   href?: string;
   type?: 'button' | 'submit' | 'reset';
+  plain?: boolean;
 }
 
 // 버튼 컴포넌트
 export const Button = React.forwardRef<
-  HTMLButtonElement | HTMLAnchorElement,
+  HTMLButtonElement,
   ButtonProps
->(({ className, variant, size, href, children, type: buttonType, ...rest }, ref) => {
-  const classes = cn(buttonVariants({ variant, size, className }));
+>(({ className, variant, size, href, children, type: buttonType, plain, ...rest }, ref) => {
+  const classes = plain ? className : cn(buttonVariants({ variant, size, className }));
 
   if (href) {
     // rest에서 button 전용 속성들 제거
@@ -62,13 +63,12 @@ export const Button = React.forwardRef<
       formNoValidate,
       formTarget,
       value,
-      ...anchorProps // Link 및 <a> 태그에 전달될 나머지 props
+      ...anchorProps
     } = rest;
 
     return (
       <Link
         href={href}
-        ref={ref as React.Ref<HTMLAnchorElement>}
         className={classes}
         {...(anchorProps as Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href' | 'className' | 'children'>)}
       >
@@ -81,8 +81,8 @@ export const Button = React.forwardRef<
     <button
       type={buttonType || 'button'}
       className={classes}
-      ref={ref as React.Ref<HTMLButtonElement>}
-      {...(rest as ButtonHTMLAttributes<HTMLButtonElement>)} // 여기서는 모든 rest가 유효
+      ref={ref}
+      {...(rest as ButtonHTMLAttributes<HTMLButtonElement>)}
     >
       {children}
     </button>

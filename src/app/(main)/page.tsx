@@ -250,7 +250,7 @@ export default async function Home() {
 
   return (
     <>
-      <Container className="mt-9">
+      <Container className="mt-40">
         <div className="max-w-2xl">
           <h1 className="text-3xl font-bold tracking-tight text-zinc-800 sm:text-4xl dark:text-zinc-100">
             엔지니어, 창업가, 프로젝트 오너.

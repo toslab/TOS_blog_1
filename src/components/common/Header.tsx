@@ -17,10 +17,8 @@ import { ProfileButton } from '@/components/common/loginandout/ProfileButton'
 import { useSession } from 'next-auth/react'
 
 import { Container } from '@/components/layouts/Container'
-// import avatarImage from '@/images/photos/TOS LAB.svg'; // 이 줄을 주석 처리하거나 삭제
-import logoLight from '@/images/photos/TOS LAB.svg'; // 일반 모드 로고
-import logoDark from '@/images/photos/TOS LAB_dark.svg'; // 다크 모드 로고
-
+import logoLight from '@/images/photos/TOS LAB.svg'
+import logoDark from '@/images/photos/TOS LAB_dark.svg'
 
 function CloseIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
   return (
@@ -37,12 +35,13 @@ function CloseIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
   )
 }
 
-function ChevronDownIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
+function MenuIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
   return (
-    <svg viewBox="0 0 8 6" aria-hidden="true" {...props}>
+    <svg viewBox="0 0 24 24" aria-hidden="true" {...props}>
       <path
-        d="M1.75 1.75 4 4.25l2.25-2.5"
+        d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5"
         fill="none"
+        stroke="currentColor"
         strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -86,55 +85,87 @@ function MoonIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
 function MobileNavItem({
   href,
   children,
+  onClick,
 }: {
   href: string
   children: React.ReactNode
+  onClick?: () => void
 }) {
   return (
     <li>
-      <PopoverButton as={Link} href={href} className="block py-2">
+      <PopoverButton 
+        as={Link} 
+        href={href} 
+        className="block py-3 text-base font-medium whitespace-nowrap"
+        onClick={onClick}
+      >
         {children}
       </PopoverButton>
     </li>
   )
 }
 
-function MobileNavigation(
-  props: React.ComponentPropsWithoutRef<typeof Popover>,
-) {
+function MobileNavigation({
+  className
+}: {
+  className?: string
+}) {
+  const { resolvedTheme, setTheme } = useTheme()
+  const otherTheme = resolvedTheme === 'dark' ? 'light' : 'dark'
+  
   return (
-    <Popover {...props}>
-      <PopoverButton className="group flex items-center rounded-full bg-white/90 px-4 py-2 text-sm font-medium text-zinc-800 shadow-lg ring-1 shadow-zinc-800/5 ring-zinc-900/5 backdrop-blur-sm dark:bg-zinc-800/90 dark:text-zinc-200 dark:ring-white/10 dark:hover:ring-white/20">
-        Menu
-        <ChevronDownIcon className="ml-3 h-auto w-2 stroke-zinc-500 group-hover:stroke-zinc-700 dark:group-hover:stroke-zinc-400" />
-      </PopoverButton>
-      <PopoverBackdrop
-        transition
-        className="fixed inset-0 z-50 bg-zinc-800/40 backdrop-blur-xs duration-150 data-closed:opacity-0 data-enter:ease-out data-leave:ease-in dark:bg-black/80"
-      />
-      <PopoverPanel
-        focus
-        transition
-        className="fixed inset-x-4 top-8 z-50 origin-top rounded-3xl bg-white p-8 ring-1 ring-zinc-900/5 duration-150 data-closed:scale-95 data-closed:opacity-0 data-enter:ease-out data-leave:ease-in dark:bg-zinc-900 dark:ring-zinc-800"
-      >
-        <div className="flex flex-row-reverse items-center justify-between">
-          <PopoverButton aria-label="Close menu" className="-m-1 p-1">
-            <CloseIcon className="h-6 w-6 text-zinc-500 dark:text-zinc-400" />
+    <Popover className={className}>
+      {({ open }) => (
+        <>
+          <PopoverButton className="group flex items-center rounded-full bg-white/90 p-2.5 shadow-lg ring-1 shadow-zinc-800/5 ring-zinc-900/5 backdrop-blur-sm dark:bg-zinc-800/90 dark:ring-white/10 dark:hover:ring-white/20">
+            {open ? (
+              <CloseIcon className="h-6 w-6 text-zinc-700 dark:text-zinc-200" />
+            ) : (
+              <MenuIcon className="h-6 w-6 text-zinc-700 dark:text-zinc-200" />
+            )}
           </PopoverButton>
-          <h2 className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-            Navigation
-          </h2>
-        </div>
-        <nav className="mt-6">
-          <ul className="-my-2 divide-y divide-zinc-100 text-base text-zinc-800 dark:divide-zinc-100/5 dark:text-zinc-300">
-            <MobileNavItem href="/about">About</MobileNavItem>
-            <MobileNavItem href="/articles">Articles</MobileNavItem>
-            <MobileNavItem href="/projects">Projects</MobileNavItem>
-            <MobileNavItem href="/speaking">Speaking</MobileNavItem>
-            <MobileNavItem href="/uses">History</MobileNavItem>
-          </ul>
-        </nav>
-      </PopoverPanel>
+          
+          <PopoverBackdrop
+            transition
+            className="fixed inset-0 z-50 bg-zinc-800/40 backdrop-blur-xs duration-150 data-closed:opacity-0 data-enter:ease-out data-leave:ease-in dark:bg-black/80"
+          />
+          
+          <PopoverPanel
+            transition
+            className="fixed inset-x-4 top-20 z-50 origin-top rounded-3xl bg-white p-8 ring-1 ring-zinc-900/5 duration-150 data-closed:scale-95 data-closed:opacity-0 data-enter:ease-out data-leave:ease-in dark:bg-zinc-900 dark:ring-zinc-800"
+          >
+            <nav>
+              <ul className="divide-y divide-zinc-100 text-zinc-800 dark:divide-zinc-100/5 dark:text-zinc-300">
+                <MobileNavItem href="/about">About</MobileNavItem>
+                <MobileNavItem href="/articles">Articles</MobileNavItem>
+                <MobileNavItem href="/projects">Projects</MobileNavItem>
+                <MobileNavItem href="/meetup">Meet-up</MobileNavItem>
+                <MobileNavItem href="/uses">History</MobileNavItem>
+              </ul>
+              
+              {/* 다크모드 토글 */}
+              <div className="mt-6 pt-6 border-t border-zinc-100 dark:border-zinc-100/5">
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-between py-3 text-base font-medium"
+                  onClick={() => setTheme(otherTheme)}
+                >
+                  <span className="text-zinc-800 dark:text-zinc-200">
+                    {resolvedTheme === 'dark' ? 'Light mode' : 'Dark mode'}
+                  </span>
+                  <div className="rounded-full bg-zinc-100 p-2 dark:bg-zinc-800">
+                    {resolvedTheme === 'dark' ? (
+                      <SunIcon className="h-5 w-5 fill-zinc-100 stroke-zinc-500" />
+                    ) : (
+                      <MoonIcon className="h-5 w-5 fill-zinc-700 stroke-zinc-500" />
+                    )}
+                  </div>
+                </button>
+              </div>
+            </nav>
+          </PopoverPanel>
+        </>
+      )}
     </Popover>
   )
 }
@@ -153,7 +184,7 @@ function NavItem({
       <Link
         href={href}
         className={clsx(
-          'relative block px-3 py-2 transition',
+          'relative block px-6 py-2 transition whitespace-nowrap',
           isActive
             ? 'text-teal-500 dark:text-teal-400'
             : 'hover:text-teal-500 dark:hover:text-teal-400',
@@ -171,11 +202,11 @@ function NavItem({
 function DesktopNavigation(props: React.ComponentPropsWithoutRef<'nav'>) {
   return (
     <nav {...props}>
-      <ul className="flex rounded-full bg-white/90 px-3 text-sm font-medium text-zinc-800 shadow-lg ring-1 shadow-zinc-800/5 ring-zinc-900/5 backdrop-blur-sm dark:bg-zinc-800/90 dark:text-zinc-200 dark:ring-white/10">
+      <ul className="flex gap-2 rounded-full bg-white/90 px-10 py-3 text-sm font-medium text-zinc-800 shadow-lg ring-1 shadow-zinc-800/5 ring-zinc-900/5 backdrop-blur-sm dark:bg-zinc-800/90 dark:text-zinc-200 dark:ring-white/10">
         <NavItem href="/about">About</NavItem>
         <NavItem href="/articles">Articles</NavItem>
         <NavItem href="/projects">Projects</NavItem>
-        <NavItem href="/speaking">Speaking</NavItem>
+        <NavItem href="/meetup">Meet-up</NavItem>
         <NavItem href="/uses">History</NavItem>
       </ul>
     </nav>
@@ -228,11 +259,11 @@ function AvatarContainer({
 function Avatar({
   large = false,
   className,
-  currentLogo, // 현재 테마에 맞는 로고 src를 props로 받음
+  currentLogo,
   ...props
 }: Omit<React.ComponentPropsWithoutRef<typeof Link>, 'href'> & {
   large?: boolean;
-  currentLogo: any; // SVG import 타입에 맞게 설정 (예: string 또는 StaticImageData)
+  currentLogo: any;
 }) {
   return (
     <Link
@@ -242,12 +273,12 @@ function Avatar({
       {...props}
     >
       <Image
-        src={currentLogo} // props로 받은 로고 사용
-        alt="TOS LAB Logo" // alt 텍스트 수정
+        src={currentLogo}
+        alt="TOS LAB Logo"
         sizes={large ? '4rem' : '3.25rem'}
         className={clsx(
-          'object-contain transform scale-[2]', // 기존 스타일 유지
-          large ? 'h-6 w-20' : 'h-5 w-12',      // 기존 스타일 유지
+          'object-contain transform scale-[2.5]',
+          large ? 'h-6 w-20' : 'h-5 w-16',
         )}
         priority
       />
@@ -261,22 +292,18 @@ export function Header() {
   const [mounted, setMounted] = useState(false)
   const { data: session } = useSession()
   
-  // ✅ 모든 Hook을 여기로 이동
   let isHomePage = pathname === '/'
   let headerRef = useRef<React.ElementRef<'div'>>(null)
-  let avatarRef = useRef<React.ElementRef<'div'>>(null)
   let isInitial = useRef(true)
   
-  // 마운트 관련 useEffect
   useEffect(() => {
     setMounted(true)
   }, [])
   
-  // 스크롤 관련 useEffect도 여기로 이동
   useEffect(() => {
-    if (pathname === '/login') return; // 로그인 페이지에서는 스크롤 이벤트 리스너를 등록하지 않음
+    if (pathname === '/login') return;
     
-    let downDelay = avatarRef.current?.offsetTop ?? 0
+    let downDelay = 0
     let upDelay = 64
 
     function setProperty(property: string, value: string) {
@@ -320,48 +347,14 @@ export function Header() {
       if (top === 0 && scrollY > 0 && scrollY >= downDelay) {
         setProperty('--header-inner-position', 'fixed')
         removeProperty('--header-top')
-        removeProperty('--avatar-top')
       } else {
         removeProperty('--header-inner-position')
         setProperty('--header-top', '0px')
-        setProperty('--avatar-top', '0px')
       }
-    }
-
-    function updateAvatarStyles() {
-      if (!isHomePage) {
-        return
-      }
-
-      let fromScale = 1
-      let toScale = 36 / 64
-      let fromX = 0
-      let toX = 2 / 16
-
-      let scrollY = downDelay - window.scrollY
-
-      let scale = (scrollY * (fromScale - toScale)) / downDelay + toScale
-      scale = clamp(scale, fromScale, toScale)
-
-      let x = (scrollY * (fromX - toX)) / downDelay + toX
-      x = clamp(x, fromX, toX)
-
-      setProperty(
-        '--avatar-image-transform',
-        `translate3d(${x}rem, 0, 0) scale(${scale})`,
-      )
-
-      let borderScale = 1 / (toScale / scale)
-      let borderX = (-toX + x) * borderScale
-      let borderTransform = `translate3d(${borderX}rem, 0, 0) scale(${borderScale})`
-
-      setProperty('--avatar-border-transform', borderTransform)
-      setProperty('--avatar-border-opacity', scale === toScale ? '1' : '0')
     }
 
     function updateStyles() {
       updateHeaderStyles()
-      updateAvatarStyles()
       isInitial.current = false
     }
 
@@ -380,7 +373,6 @@ export function Header() {
     return null
   }
   
-  // 마운트되지 않았거나 테마를 아직 확정할 수 없을 때 기본 로고
   const logoForAvatar = mounted && resolvedTheme === 'dark' ? logoDark : logoLight;
   
   return (
@@ -392,45 +384,6 @@ export function Header() {
           marginBottom: 'var(--header-mb)',
         }}
       >
-        {isHomePage && (
-          <>
-            <div
-              ref={avatarRef}
-              className="order-last mt-[calc(--spacing(16)-(--spacing(3)))]"
-            />
-            <Container
-              className="top-0 order-last -mb-3 pt-3"
-              style={{
-                position:
-                  'var(--header-position)' as React.CSSProperties['position'],
-              }}
-            >
-              <div
-                className="top-(--avatar-top,--spacing(3)) w-full"
-                style={{
-                  position:
-                    'var(--header-inner-position)' as React.CSSProperties['position'],
-                }}
-              >
-                <div className="relative ml-6">
-                  <AvatarContainer
-                    className="absolute top-3 left-0 origin-left transition-opacity"
-                    style={{
-                      opacity: 'var(--avatar-border-opacity, 0)',
-                      transform: 'var(--avatar-border-transform)',
-                    }}
-                  />
-                  <Avatar
-                    large
-                    className="block h-16 w-16 origin-left"
-                    style={{ transform: 'var(--avatar-image-transform)' }}
-                    currentLogo={logoForAvatar} // 현재 테마에 맞는 로고 전달
-                  />
-                </div>
-              </div>
-            </Container>
-          </>
-        )}
         <div
           ref={headerRef}
           className="top-0 z-10 h-16 pt-6"
@@ -446,19 +399,28 @@ export function Header() {
                 'var(--header-inner-position)' as React.CSSProperties['position'],
             }}
           >
-            <div className="relative flex gap-4">
-              <div className="flex flex-1">
-                {!isHomePage && (
-                  <AvatarContainer>
-                    <Avatar currentLogo={logoForAvatar} /> {/* 현재 테마에 맞는 로고 전달 */}
-                  </AvatarContainer>
-                )}
+            <div className="relative flex gap-4 items-center">
+              <div className="flex flex-1 items-center">
+                <AvatarContainer>
+                  <Avatar currentLogo={logoForAvatar} />
+                </AvatarContainer>
               </div>
-              <div className="flex flex-1 justify-end md:justify-center">
-                <MobileNavigation className="pointer-events-auto md:hidden" />
-                <DesktopNavigation className="pointer-events-auto hidden md:block" />
+              
+              {/* 데스크탑 네비게이션 (lg 이상에서 표시) */}
+              <div className="hidden lg:flex lg:flex-1 lg:justify-center">
+                <DesktopNavigation className="pointer-events-auto" />
               </div>
-              <div className="flex justify-end md:flex-1">
+              
+              {/* 모바일/태블릿: 로그인/프로필 + 버거 메뉴 (lg 미만에서 표시) */}
+              <div className="flex flex-1 justify-end lg:hidden">
+                <div className="pointer-events-auto flex items-center gap-3">
+                  {session?.user ? <ProfileButton /> : <LoginButton />}
+                  <MobileNavigation />
+                </div>
+              </div>
+              
+              {/* 데스크탑 오른쪽 버튼들 (lg 이상에서 표시) */}
+              <div className="hidden lg:flex lg:justify-end lg:flex-1">
                 <div className="pointer-events-auto flex items-center gap-4">
                   {session?.user ? <ProfileButton /> : <LoginButton />}
                   <ThemeToggle />

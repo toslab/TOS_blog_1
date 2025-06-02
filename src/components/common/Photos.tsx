@@ -77,7 +77,11 @@ export default function Photos() {
     <div className="mt-16 sm:mt-20">
       <div
         ref={scrollContainerRef}
-        className="flex items-center gap-5 overflow-x-auto overflow-y-hidden py-4 scroll-smooth scroll-snap-type-x-mandatory sm:gap-8 md:px-4 cursor-grab hide-scrollbar justify-center"
+        className="flex items-center gap-5 overflow-x-auto overflow-y-hidden py-4 scroll-smooth scroll-snap-type-x-mandatory sm:gap-8 md:px-4 cursor-grab justify-center
+        scrollbar-hide
+        [&::-webkit-scrollbar]:hidden
+        [-ms-overflow-style:none]
+        [scrollbar-width:none]"
         onMouseDown={handleMouseDown}
         onMouseLeave={handleMouseLeaveOrUp}
         onMouseUp={handleMouseLeaveOrUp}

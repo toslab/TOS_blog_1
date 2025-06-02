@@ -2,7 +2,7 @@ import { type Metadata } from 'next'
 import Image from 'next/image'
 
 import { Card } from '@/components/common/Card'
-import { SimpleLayout } from '@/components/layouts/SimpleLayout'
+import { SimpleLayout } from '@/components/SimpleLayout'
 import logoAnimaginary from '@/images/logos/animaginary.svg'
 import logoCosmos from '@/images/logos/cosmos.svg'
 import logoHelioStream from '@/images/logos/helio-stream.svg'
