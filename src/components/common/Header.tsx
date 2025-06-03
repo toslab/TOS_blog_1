@@ -14,11 +14,66 @@ import {
 import clsx from 'clsx'
 import { LoginButton } from '@/components/common/loginandout/LoginButton'
 import { ProfileButton } from '@/components/common/loginandout/ProfileButton'
+import { Dropdown, type DropdownSection, type DropdownFooter } from '@/components/common/Dropdown'
 import { useSession } from 'next-auth/react'
+import { 
+  CalendarDaysIcon, 
+  UserGroupIcon, 
+  CodeBracketIcon,
+  PresentationChartLineIcon,
+  ChatBubbleLeftRightIcon,
+  SparklesIcon
+} from '@heroicons/react/24/outline'
 
 import { Container } from '@/components/layouts/Container'
 import logoLight from '@/images/photos/TOS LAB.svg'
 import logoDark from '@/images/photos/TOS LAB_dark.svg'
+
+// Meetup 드롭다운 데이터
+const meetupDropdownData: DropdownSection[] = [
+  {
+    title: 'TOSLAB Meetup',
+    description: '개발자와 창업가들이 모여 지식과 경험을 나누는 커뮤니티',
+    items: [
+      {
+        name: 'Tech Talks',
+        description: '최신 기술 트렌드와 개발 경험을 공유하는 모임',
+        href: '/meetup/tech-talks',
+        icon: CodeBracketIcon,
+      },
+      {
+        name: 'Networking',
+        description: '개발자들과 네트워킹하고 인사이트를 나누는 시간',
+        href: '/meetup/networking',
+        icon: UserGroupIcon,
+      },
+      {
+        name: 'Workshops',
+        description: '실무 중심의 핸즈온 워크샵과 실습',
+        href: '/meetup/workshops',
+        icon: PresentationChartLineIcon,
+      },
+      {
+        name: 'Coffee Chat',
+        description: '편안한 분위기에서 진행되는 소규모 토론',
+        href: '/meetup/coffee-chat',
+        icon: ChatBubbleLeftRightIcon,
+      },
+      {
+        name: 'Innovation Lab',
+        description: '새로운 아이디어와 프로젝트를 함께 만드는 모임',
+        href: '/meetup/innovation-lab',
+        icon: SparklesIcon,
+      }
+    ]
+  }
+]
+
+const meetupDropdownFooter: DropdownFooter = {
+  text: '모든 모임 보기',
+  href: '/meetup',
+  icon: CalendarDaysIcon
+}
 
 function CloseIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
   return (
@@ -139,7 +194,15 @@ function MobileNavigation({
                 <MobileNavItem href="/about">About</MobileNavItem>
                 <MobileNavItem href="/articles">Articles</MobileNavItem>
                 <MobileNavItem href="/projects">Projects</MobileNavItem>
-                <MobileNavItem href="/meetup">Meet-up</MobileNavItem>
+                <li className="py-3">
+                  <Dropdown
+                    label="Meet-up"
+                    sections={meetupDropdownData}
+                    footer={meetupDropdownFooter}
+                    variant="mobile"
+                    mobileHref="/meetup"
+                  />
+                </li>
                 <MobileNavItem href="/uses">History</MobileNavItem>
               </ul>
               
@@ -192,7 +255,7 @@ function NavItem({
       >
         {children}
         {isActive && (
-          <span className="absolute inset-x-1 -bottom-px h-px bg-linear-to-r from-teal-500/0 via-teal-500/40 to-teal-500/0 dark:from-teal-400/0 dark:via-teal-400/40 dark:to-teal-400/0" />
+          <span className="absolute inset-x-1 -bottom-px h-px bg-gradient-to-r from-teal-500/0 via-teal-500/40 to-teal-500/0 dark:from-teal-400/0 dark:via-teal-400/40 dark:to-teal-400/0" />
         )}
       </Link>
     </li>
@@ -200,13 +263,26 @@ function NavItem({
 }
 
 function DesktopNavigation(props: React.ComponentPropsWithoutRef<'nav'>) {
+  const pathname = usePathname()
+  const isMeetupActive = pathname.startsWith('/meetup')
+
   return (
     <nav {...props}>
       <ul className="flex gap-2 rounded-full bg-white/90 px-10 py-3 text-sm font-medium text-zinc-800 shadow-lg ring-1 shadow-zinc-800/5 ring-zinc-900/5 backdrop-blur-sm dark:bg-zinc-800/90 dark:text-zinc-200 dark:ring-white/10">
         <NavItem href="/about">About</NavItem>
         <NavItem href="/articles">Articles</NavItem>
         <NavItem href="/projects">Projects</NavItem>
-        <NavItem href="/meetup">Meet-up</NavItem>
+        <li>
+          <Dropdown
+            label="Meet-up"
+            isActive={isMeetupActive}
+            sections={meetupDropdownData}
+            footer={meetupDropdownFooter}
+            variant="desktop"
+            width="w-80"
+            position="left"
+          />
+        </li>
         <NavItem href="/uses">History</NavItem>
       </ul>
     </nav>
