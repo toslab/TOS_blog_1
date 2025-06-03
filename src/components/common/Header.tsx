@@ -277,8 +277,8 @@ function Avatar({
         alt="TOS LAB Logo"
         sizes={large ? '4rem' : '3.25rem'}
         className={clsx(
-          'object-contain transform scale-[2.5]',
-          large ? 'h-6 w-20' : 'h-5 w-16',
+          'object-contain transform scale-[2] sm:scale-[2.5] lg:scale-[2.25]',
+          large ? 'h-6 w-20' : 'h-4 w-14 sm:h-5 sm:w-16 lg:h-4.5 lg:w-15',
         )}
         priority
       />
@@ -393,37 +393,50 @@ export function Header() {
           }}
         >
           <Container
-            className="top-(--header-top,--spacing(6)) w-full"
+            className="top-(--header-top,--spacing(6)) w-full px-4 sm:px-6 lg:px-8 xl:px-8"
             style={{
               position:
                 'var(--header-inner-position)' as React.CSSProperties['position'],
             }}
           >
-            <div className="relative flex gap-4 items-center">
-              <div className="flex flex-1 items-center">
+            <div className="relative flex items-center">
+              {/* 모바일 레이아웃 (lg 미만에서 표시) */}
+              <div className="flex lg:hidden items-center w-full">
+                {/* 로고 */}
                 <AvatarContainer>
                   <Avatar currentLogo={logoForAvatar} />
                 </AvatarContainer>
-              </div>
-              
-              {/* 데스크탑 네비게이션 (lg 이상에서 표시) */}
-              <div className="hidden lg:flex lg:flex-1 lg:justify-center">
-                <DesktopNavigation className="pointer-events-auto" />
-              </div>
-              
-              {/* 모바일/태블릿: 로그인/프로필 + 버거 메뉴 (lg 미만에서 표시) */}
-              <div className="flex flex-1 justify-end lg:hidden">
-                <div className="pointer-events-auto flex items-center gap-3">
+                
+                {/* 중앙 공간 확보 */}
+                <div className="flex-1" />
+                
+                {/* 로그인/프로필 + 버거 메뉴 */}
+                <div className="pointer-events-auto flex items-center gap-1.5 sm:gap-2 md:gap-3">
                   {session?.user ? <ProfileButton /> : <LoginButton />}
                   <MobileNavigation />
                 </div>
               </div>
               
-              {/* 데스크탑 오른쪽 버튼들 (lg 이상에서 표시) */}
-              <div className="hidden lg:flex lg:justify-end lg:flex-1">
-                <div className="pointer-events-auto flex items-center gap-4">
-                  {session?.user ? <ProfileButton /> : <LoginButton />}
-                  <ThemeToggle />
+              {/* 데스크탑 레이아웃 (lg 이상에서 표시) */}
+              <div className="hidden lg:flex lg:items-center lg:w-full lg:gap-4">
+                {/* 로고 */}
+                <div className="flex flex-1 items-center">
+                  <AvatarContainer>
+                    <Avatar currentLogo={logoForAvatar} />
+                  </AvatarContainer>
+                </div>
+                
+                {/* 데스크탑 네비게이션 */}
+                <div className="flex flex-1 justify-center">
+                  <DesktopNavigation className="pointer-events-auto" />
+                </div>
+                
+                {/* 데스크탑 오른쪽 버튼들 */}
+                <div className="flex justify-end flex-1">
+                  <div className="pointer-events-auto flex items-center gap-4">
+                    {session?.user ? <ProfileButton /> : <LoginButton />}
+                    <ThemeToggle />
+                  </div>
                 </div>
               </div>
             </div>

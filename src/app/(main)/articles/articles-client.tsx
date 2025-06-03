@@ -1,3 +1,4 @@
+// src/app/(main)/articles/articles-client.tsx
 'use client'
 
 import { useState, useMemo } from 'react'
@@ -10,12 +11,13 @@ import {
   PopoverGroup,
   PopoverPanel,
 } from '@headlessui/react'
-import { ChevronDownIcon, XMarkIcon } from '@heroicons/react/20/solid'
+import { ChevronDownIcon, XMarkIcon, MagnifyingGlassIcon } from '@heroicons/react/20/solid'
 
 import { Card } from '@/components/common/Card'
 import { SimpleLayout } from '@/components/common/SimpleLayout'
 import { type ArticleWithSlug } from '@/lib/articles'
 import { formatDate } from '@/lib/formatDate'
+import { SearchInput } from '@/components/common/SearchInput'
 
 function Article({ article }: { article: ArticleWithSlug }) {
   return (
@@ -87,16 +89,31 @@ export default function ArticlesPageClient({
   tagCounts 
 }: ArticlesPageClientProps) {
   const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [searchQuery, setSearchQuery] = useState('')
 
   // 선택된 태그에 따라 글 필터링
   const filteredArticles = useMemo(() => {
-    if (selectedTags.length === 0) {
-      return articles
+    let filtered = articles
+
+    // 태그 필터링
+    if (selectedTags.length > 0) {
+      filtered = filtered.filter(article => 
+        selectedTags.some(tag => article.tags?.includes(tag))
+      )
     }
-    return articles.filter(article => 
-      selectedTags.some(tag => article.tags?.includes(tag))
-    )
-  }, [articles, selectedTags])
+
+    // 검색 필터링
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase()
+      filtered = filtered.filter(article => 
+        article.title.toLowerCase().includes(query) ||
+        article.description.toLowerCase().includes(query) ||
+        article.tags?.some(tag => tag.toLowerCase().includes(query))
+      )
+    }
+
+    return filtered
+  }, [articles, selectedTags, searchQuery])
 
   // 태그 선택/해제 토글
   const toggleTag = (tag: string) => {
@@ -110,6 +127,7 @@ export default function ArticlesPageClient({
   // 모든 필터 초기화
   const clearFilters = () => {
     setSelectedTags([])
+    setSearchQuery('')
   }
 
   return (
@@ -117,70 +135,44 @@ export default function ArticlesPageClient({
       title="Writing on software design, company building, and the aerospace industry."
       intro="All of my long-form thoughts on programming, leadership, product design, and more, collected in chronological order."
     >
-      {/* 필터 섹션 */}
+      {/* 검색 및 필터 섹션 - 한 줄로 통합 */}
       <div className="mb-8">
         <div className="border-b border-zinc-200 pb-5 dark:border-zinc-700">
-          <div className="flex items-center justify-between">
-            <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
-              필터
-            </h3>
-            
-            {/* 데스크톱 필터 */}
-            <div className="hidden sm:block">
-              <PopoverGroup className="flex items-center gap-4">
-                <Popover className="relative">
-                  <PopoverButton className="inline-flex items-center gap-2 text-sm font-medium text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100">
-                    <span>태그</span>
-                    {selectedTags.length > 0 && (
-                      <span className="rounded-full bg-zinc-200 px-2 py-0.5 text-xs font-semibold text-zinc-700 dark:bg-zinc-700 dark:text-zinc-300">
-                        {selectedTags.length}
-                      </span>
-                    )}
-                    <ChevronDownIcon className="h-4 w-4" />
-                  </PopoverButton>
-
-                  <PopoverPanel className="absolute right-0 z-10 mt-3 w-64 origin-top-right rounded-lg bg-white p-4 shadow-lg ring-1 ring-black/5 dark:bg-zinc-800 dark:ring-white/10">
-                    <div className="space-y-3">
-                      {allTags.map(tag => (
-                        <label
-                          key={tag}
-                          className="flex cursor-pointer items-center gap-3 text-sm"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={selectedTags.includes(tag)}
-                            onChange={() => toggleTag(tag)}
-                            className="h-4 w-4 rounded border-zinc-300 text-zinc-600 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700"
-                          />
-                          <span className="flex-1 text-zinc-700 dark:text-zinc-300">
-                            {getTagLabel(tag)}
-                          </span>
-                          <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                            {tagCounts[tag]}
-                          </span>
-                        </label>
-                      ))}
-                    </div>
-                  </PopoverPanel>
-                </Popover>
-              </PopoverGroup>
+          <div className="flex items-center gap-3 sm:gap-4">
+            {/* 검색 입력 - 모바일에서 너비 조정 */}
+            <div className="flex-1 sm:flex-auto">
+              <SearchInput
+                value={searchQuery}
+                onChange={setSearchQuery}
+                placeholder="검색..."
+                className="w-full"
+              />
             </div>
 
-            {/* 모바일 필터 */}
-            <div className="sm:hidden">
-              <Disclosure>
-                {({ open }) => (
-                  <>
-                    <DisclosureButton className="inline-flex items-center gap-2 text-sm font-medium text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100">
+            {/* 구분선 - 모바일에서는 숨김 */}
+            <div className="hidden sm:block h-10 w-px bg-zinc-300 dark:bg-zinc-600" />
+
+            {/* 필터 섹션 */}
+            <div className="flex items-center gap-2 sm:gap-4">
+              <h3 className="hidden sm:block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                필터
+              </h3>
+              
+              {/* 데스크톱 필터 */}
+              <div className="hidden sm:block relative">
+                <PopoverGroup className="flex items-center gap-4">
+                  <Popover className="relative">
+                    <PopoverButton className="inline-flex items-center gap-2 text-sm font-medium text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100">
                       <span>태그</span>
                       {selectedTags.length > 0 && (
                         <span className="rounded-full bg-zinc-200 px-2 py-0.5 text-xs font-semibold text-zinc-700 dark:bg-zinc-700 dark:text-zinc-300">
                           {selectedTags.length}
                         </span>
                       )}
-                      <ChevronDownIcon className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`} />
-                    </DisclosureButton>
-                    <DisclosurePanel className="mt-4">
+                      <ChevronDownIcon className="h-4 w-4" />
+                    </PopoverButton>
+
+                    <PopoverPanel className="absolute right-0 z-50 mt-3 w-64 origin-top-right rounded-lg bg-white p-4 shadow-lg ring-1 ring-black/5 dark:bg-zinc-800 dark:ring-white/10">
                       <div className="space-y-3">
                         {allTags.map(tag => (
                           <label
@@ -202,19 +194,79 @@ export default function ArticlesPageClient({
                           </label>
                         ))}
                       </div>
-                    </DisclosurePanel>
-                  </>
-                )}
-              </Disclosure>
+                    </PopoverPanel>
+                  </Popover>
+                </PopoverGroup>
+              </div>
+
+              {/* 모바일 필터 */}
+              <div className="sm:hidden relative">
+                <Disclosure>
+                  {({ open }) => (
+                    <>
+                      <DisclosureButton className="inline-flex items-center gap-1.5 text-sm font-medium text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100 px-3 py-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                        <span>태그</span>
+                        {selectedTags.length > 0 && (
+                          <span className="rounded-full bg-zinc-200 px-1.5 py-0.5 text-xs font-semibold text-zinc-700 dark:bg-zinc-700 dark:text-zinc-300 min-w-[1.25rem] text-center">
+                            {selectedTags.length}
+                          </span>
+                        )}
+                        <ChevronDownIcon className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`} />
+                      </DisclosureButton>
+                      <DisclosurePanel className="absolute right-0 z-50 mt-3 w-64 origin-top-right rounded-lg bg-white p-4 shadow-lg ring-1 ring-black/5 dark:bg-zinc-800 dark:ring-white/10">
+                        <div className="space-y-3">
+                          {allTags.map(tag => (
+                            <label
+                              key={tag}
+                              className="flex cursor-pointer items-center gap-3 text-sm"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selectedTags.includes(tag)}
+                                onChange={() => toggleTag(tag)}
+                                className="h-4 w-4 rounded border-zinc-300 text-zinc-600 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700"
+                              />
+                              <span className="flex-1 text-zinc-700 dark:text-zinc-300">
+                                {getTagLabel(tag)}
+                              </span>
+                              <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                                {tagCounts[tag]}
+                              </span>
+                            </label>
+                          ))}
+                        </div>
+                      </DisclosurePanel>
+                    </>
+                  )}
+                </Disclosure>
+              </div>
             </div>
           </div>
         </div>
 
         {/* 선택된 필터 표시 */}
-        {selectedTags.length > 0 && (
+        {(selectedTags.length > 0 || searchQuery) && (
           <div className="mt-4">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm text-zinc-500 dark:text-zinc-400">선택된 태그:</span>
+              <span className="text-sm text-zinc-500 dark:text-zinc-400">
+                활성 필터:
+              </span>
+              
+              {/* 검색어 표시 */}
+              {searchQuery && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 py-1 pr-2 pl-3 text-sm font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-200">
+                  <MagnifyingGlassIcon className="h-3 w-3" />
+                  <span>"{searchQuery}"</span>
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="flex h-4 w-4 items-center justify-center rounded-full hover:bg-blue-200 dark:hover:bg-blue-800/50"
+                  >
+                    <XMarkIcon className="h-3 w-3" />
+                  </button>
+                </span>
+              )}
+              
               {selectedTags.map(tag => (
                 <span
                   key={tag}
@@ -230,13 +282,20 @@ export default function ArticlesPageClient({
                   </button>
                 </span>
               ))}
-              <button
-                type="button"
-                onClick={clearFilters}
-                className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
-              >
-                모두 지우기
-              </button>
+              
+              {/* 결과 수와 초기화 버튼을 같은 줄에 */}
+              <span className="ml-auto flex items-center gap-4">
+                <span className="text-sm text-zinc-600 dark:text-zinc-400">
+                  {filteredArticles.length}개의 글
+                </span>
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                >
+                  모두 지우기
+                </button>
+              </span>
             </div>
           </div>
         )}
@@ -250,9 +309,16 @@ export default function ArticlesPageClient({
               <Article key={article.slug} article={article} />
             ))
           ) : (
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
-              선택한 태그에 해당하는 글이 없습니다.
-            </p>
+            <div className="text-center py-12">
+              <MagnifyingGlassIcon className="mx-auto h-12 w-12 text-zinc-400" />
+              <h3 className="mt-2 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                검색 결과가 없습니다
+              </h3>
+              <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+                {searchQuery && `"${searchQuery}"에 대한 검색 결과가 없습니다. `}
+                다른 검색어나 태그를 시도해보세요.
+              </p>
+            </div>
           )}
         </div>
       </div>
