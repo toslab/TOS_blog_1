@@ -1,56 +1,53 @@
-# .github/workflows/ci-cd.yml
-name: CI/CD Pipeline for Spotlight Blog
+name: Deploy to Vultr
 
+# 언제 실행할지 설정
 on:
   push:
-    branches: [ main ] # 'main' 브랜치에 푸시될 때 실행
-  pull_request:
-    branches: [ main ] # 'main' 브랜치로 Pull Request가 올 때 실행 (배포는 안 함)
+    branches: [ main ]  # main 브랜치에 push될 때
 
 jobs:
-  test:
-    name: Test and Lint
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4 # GitHub 저장소 코드 가져오기 (최신 버전 권장)
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4 # Node.js 환경 설정 (최신 버전 권장)
-        with:
-          node-version: '20.x' # spotlight-ts 및 Next.js 최신 버전에 맞는 Node.js LTS 버전 사용
-          cache: 'npm' # npm 의존성 캐싱으로 빌드 속도 향상
-
-      - name: Install dependencies
-        run: npm ci # package-lock.json 기반으로 의존성 설치
-
-      - name: Run linters # 테스트 대신 lint 실행 (spotlight-ts 기본 스크립트)
-        run: npm run lint
-
   deploy:
-    name: Deploy to Vultr
-    needs: test # 'test' 작업이 성공해야 실행
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' # 'main' 브랜치로 'push'될 때만 실행
     runs-on: ubuntu-latest
+    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Deploy to Vultr via SSH
-        uses: appleboy/ssh-action@master # SSH 액션 (안정성을 위해 특정 버전 태그 사용 권장: 예: @v1.0.3)
-        with:
-          host: ${{ secrets.VULTR_HOST }}
-          username: ${{ secrets.VULTR_USERNAME }}
-          key: ${{ secrets.VULTR_SSH_KEY }}
-          script: |
-            echo "Starting deployment to Vultr server..."
-            cd ~/spotlight-ts  # Vultr 서버 내 프로젝트 경로 (사용자 홈 디렉토리 기준)
-            echo "Pulling latest changes from main branch..."
-            git pull origin main
-            echo "Installing/updating dependencies..."
-            npm install --production=false # 빌드 스크립트 실행에 devDependencies가 필요할 수 있음
-            echo "Building project..."
-            npm run build
-            echo "Restarting PM2 application..."
-            pm2 restart spotlight-app # PM2로 실행 중인 앱 이름
-            echo "Deployment finished successfully."
+    # 1. 코드 체크아웃
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    # 2. Node.js 설정
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    # 3. 의존성 설치
+    - name: Install dependencies
+      run: npm ci
+    
+    # 4. 프로젝트 빌드
+    - name: Build project
+      run: npm run build
+    
+    # 5. 서버에 연결 설정
+    - name: Setup SSH
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/github_actions
+        chmod 600 ~/.ssh/github_actions
+        ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+    
+    # 6. 빌드 파일 서버로 전송
+    - name: Deploy to server
+      run: |
+        rsync -avz --delete \
+          -e "ssh -i ~/.ssh/github_actions" \
+          ./build/ \
+          ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ secrets.WORK_DIR }}/build/
+    
+    # 7. 서버에서 권한 설정
+    - name: Set permissions
+      run: |
+        ssh -i ~/.ssh/github_actions \
+          ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
+          "chown -R www-data:www-data ${{ secrets.WORK_DIR }}"
