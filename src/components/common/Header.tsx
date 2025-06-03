@@ -16,13 +16,12 @@ import { LoginButton } from '@/components/common/loginandout/LoginButton'
 import { ProfileButton } from '@/components/common/loginandout/ProfileButton'
 import { Dropdown, type DropdownSection, type DropdownFooter } from '@/components/common/Dropdown'
 import { useSession } from 'next-auth/react'
-import { 
-  CalendarDaysIcon, 
-  UserGroupIcon, 
-  CodeBracketIcon,
-  PresentationChartLineIcon,
-  ChatBubbleLeftRightIcon,
-  SparklesIcon
+import {
+  CalendarDaysIcon,
+  HeartIcon,
+  SparklesIcon,
+  AcademicCapIcon,
+  BookOpenIcon,
 } from '@heroicons/react/24/outline'
 
 import { Container } from '@/components/layouts/Container'
@@ -33,37 +32,31 @@ import logoDark from '@/images/photos/TOS LAB_dark.svg'
 const meetupDropdownData: DropdownSection[] = [
   {
     title: 'TOSLAB Meetup',
-    description: '개발자와 창업가들이 모여 지식과 경험을 나누는 커뮤니티',
+    description: '지식과 경험을 나눕니다.',
     items: [
       {
-        name: 'Tech Talks',
-        description: '최신 기술 트렌드와 개발 경험을 공유하는 모임',
-        href: '/meetup/tech-talks',
-        icon: CodeBracketIcon,
+        name: '차넷 (Tea-Net)',
+        description: '차와 함께 서로의 경험을 나누는 모임',
+        href: '/meetup/tea-net',
+        icon: HeartIcon,
       },
       {
-        name: 'Networking',
-        description: '개발자들과 네트워킹하고 인사이트를 나누는 시간',
-        href: '/meetup/networking',
-        icon: UserGroupIcon,
-      },
-      {
-        name: 'Workshops',
-        description: '실무 중심의 핸즈온 워크샵과 실습',
-        href: '/meetup/workshops',
-        icon: PresentationChartLineIcon,
-      },
-      {
-        name: 'Coffee Chat',
-        description: '편안한 분위기에서 진행되는 소규모 토론',
-        href: '/meetup/coffee-chat',
-        icon: ChatBubbleLeftRightIcon,
-      },
-      {
-        name: 'Innovation Lab',
-        description: '새로운 아이디어와 프로젝트를 함께 만드는 모임',
-        href: '/meetup/innovation-lab',
+        name: '비건페어',
+        description: '슬로우라이프를 주제로한 비건페어 프로그램',
+        href: '/meetup/vegan-fair',
         icon: SparklesIcon,
+      },
+      {
+        name: '티클래스',
+        description: '차와 역사, 문화를 통해 취향을 찾아가는 시간',
+        href: '/meetup/tea-class',
+        icon: AcademicCapIcon,
+      },
+      {
+        name: '독서모임',
+        description: '독서를 통해 관조하며 자신의 생각을 공유하는 모임',
+        href: '/meetup/book-club',
+        icon: BookOpenIcon,
       }
     ]
   }
@@ -203,7 +196,7 @@ function MobileNavigation({
                     mobileHref="/meetup"
                   />
                 </li>
-                <MobileNavItem href="/uses">History</MobileNavItem>
+                <MobileNavItem href="/uses">Porfolio</MobileNavItem>
               </ul>
               
               {/* 다크모드 토글 */}
@@ -283,7 +276,7 @@ function DesktopNavigation(props: React.ComponentPropsWithoutRef<'nav'>) {
             position="left"
           />
         </li>
-        <NavItem href="/uses">History</NavItem>
+        <NavItem href="/uses">Portfolio</NavItem>
       </ul>
     </nav>
   )

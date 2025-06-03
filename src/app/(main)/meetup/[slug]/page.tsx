@@ -2,7 +2,7 @@ import { type Metadata } from 'next'
 
 import { Card } from '@/components/common/Card'
 import { Section } from '@/components/common/Section'
-import { SimpleLayout } from '@/components/SimpleLayout'
+import { SimpleLayout } from '@/components/common/SimpleLayout'
 
 function SpeakingSection({
   children,
