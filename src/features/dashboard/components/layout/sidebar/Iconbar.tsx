@@ -22,7 +22,6 @@ import {
 } from '@/components/dashboard_UI/tooltip';
 
 interface IconBarProps {
-  collapsed: boolean;
   onToggle: () => void;
   onMenuToggle: () => void;
 }
@@ -31,7 +30,7 @@ const navigationItems = [
   { id: 'home', name: '홈', icon: Home, href: '/dashboard' },
   { id: 'projects', name: '프로젝트', icon: Briefcase, href: '/dashboard/projects', badge: 3 },
   { id: 'documents', name: '문서', icon: FileText, href: '/dashboard/documents' },
-  { id: 'calendar', name: '캘린더', icon: Calendar, href: '/dashboard/calendar' },
+  { id: 'calendar', name: '예약관리', icon: Calendar, href: '/dashboard/calendar' },
   { id: 'ecommerce', name: '이커머스', icon: ShoppingBag, href: '/dashboard/ecommerce' },
   { id: 'inventory', name: '재고관리', icon: Package, href: '/dashboard/inventory' },
   { id: 'research', name: 'AI 연구', icon: Brain, href: '/dashboard/research' },
@@ -43,7 +42,7 @@ const bottomItems = [
   { id: 'settings', name: '설정', icon: Settings, href: '/dashboard/settings' },
 ];
 
-export default function IconBar({ collapsed, onToggle, onMenuToggle }: IconBarProps) {
+export default function IconBar({ onToggle, onMenuToggle }: IconBarProps) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
 
@@ -58,8 +57,7 @@ export default function IconBar({ collapsed, onToggle, onMenuToggle }: IconBarPr
     <TooltipProvider delayDuration={300}>
       <div 
         className={cn(
-          "h-full bg-gray-900 text-white transition-all duration-300 flex flex-col",
-          collapsed ? "w-16" : "w-20"
+          "h-full bg-gray-900 text-white transition-all duration-300 flex flex-col w-16"
         )}
       >
         {/* Logo & Menu Toggle */}
@@ -98,10 +96,10 @@ export default function IconBar({ collapsed, onToggle, onMenuToggle }: IconBarPr
     )} />
     {item.badge && (
       <div 
-        className="absolute w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center text-[11px] font-semibold"
+        className="absolute w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center text-[13px] font-semibold"
         style={{ 
           top: '-5px', 
-          right: '-5px' 
+          right: '-7.5px' 
         }}
       >
         {item.badge}
@@ -184,30 +182,7 @@ export default function IconBar({ collapsed, onToggle, onMenuToggle }: IconBarPr
           </ul>
         </div>
 
-        {/* Collapse Toggle */}
-        <div className="p-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={onToggle}
-                className="w-full flex items-center justify-center p-2 rounded-lg hover:bg-gray-800 transition-colors"
-              >
-                {collapsed ? (
-                  <ChevronRight className="w-5 h-5 text-gray-400" />
-                ) : (
-                  <ChevronLeft className="w-5 h-5 text-gray-400" />
-                )}
-              </button>
-            </TooltipTrigger>
-            <TooltipContent 
-              side="right" 
-              className="bg-gray-800 text-white border-gray-600 shadow-xl px-3 py-2 font-medium"
-              sideOffset={9}
-            >
-              <p>{collapsed ? '사이드바 확장' : '사이드바 축소'}</p>
-            </TooltipContent>
-          </Tooltip>
-        </div>
+
       </div>
     </TooltipProvider>
   );

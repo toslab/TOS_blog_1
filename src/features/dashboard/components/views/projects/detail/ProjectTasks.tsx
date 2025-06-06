@@ -4,9 +4,9 @@
 
 import React, { useState } from 'react';
 import { Task } from '@/features/dashboard/types';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/dashboard_UI/button';
+import { Input } from '@/components/dashboard_UI/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/dashboard_UI/tabs';
 import { Plus, Search, Filter, LayoutGrid, List, Kanban } from 'lucide-react';
 import TaskListView from './tasks/TaskListView';
 import TaskKanbanView from './tasks/TaskKanbanView';

@@ -4,7 +4,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { ChevronRight, LucideIcon } from 'lucide-react';
 import { Badge } from '@/components/dashboard_UI/badge';
@@ -29,6 +29,7 @@ interface NavigationItemProps {
 export default function NavigationItem({ item, level = 0 }: NavigationItemProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [expanded, setExpanded] = React.useState(false);
 
   if (item.type === 'separator') {
@@ -98,19 +99,34 @@ export default function NavigationItem({ item, level = 0 }: NavigationItemProps)
     level > 0 && "ml-4"
   );
 
+  const handleClick = () => {
+    if (item.onClick) {
+      item.onClick();
+    }
+    if (hasChildren) {
+      setExpanded(!expanded);
+    }
+  };
+
   return (
     <li>
       {item.type === 'link' && item.href ? (
-        <Link href={item.href} className={className}>
+        <Link 
+          href={item.href} 
+          className={className}
+          onClick={() => {
+            // 링크 클릭 시 추가 처리가 필요한 경우
+            if (item.onClick) {
+              item.onClick();
+            }
+          }}
+        >
           {content}
         </Link>
       ) : (
         <button
-          onClick={() => {
-            if (item.onClick) item.onClick();
-            if (hasChildren) setExpanded(!expanded);
-          }}
-          className={cn(className, "w-full")}
+          onClick={handleClick}
+          className={cn(className, "w-full text-left")}
         >
           {content}
         </button>

@@ -3,12 +3,12 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { X } from 'lucide-react';
 import NavigationItem from './NavigationItem';
 import { useAuth } from '@/features/dashboard/contexts/AuthContext';
-import { getMenuItemsForPath } from '@/features/dashboard/utils/navigation';
+import { getMenuItemsForPath, handleMenuAction } from '@/features/dashboard/utils/navigation';
 
 interface MainMenuPanelProps {
   isOpen: boolean;
@@ -18,6 +18,7 @@ interface MainMenuPanelProps {
 
 export default function MainMenuPanel({ isOpen, onClose, isMobile = false }: MainMenuPanelProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const { user } = useAuth();
   const [menuData, setMenuData] = useState<any>(null);
 
@@ -25,6 +26,21 @@ export default function MainMenuPanel({ isOpen, onClose, isMobile = false }: Mai
     const data = getMenuItemsForPath(pathname, user);
     setMenuData(data);
   }, [pathname, user]);
+
+  // 액션 핸들러 추가
+  const handleItemAction = (actionId: string) => {
+    handleMenuAction(actionId, router);
+    // 모바일에서는 액션 후 메뉴 닫기
+    if (isMobile) {
+      onClose();
+    }
+  };
+
+  // 메뉴 아이템 처리 (액션 핸들러 추가)
+  const processedItems = menuData?.items.map((item: any) => ({
+    ...item,
+    onClick: item.type === 'action' ? () => handleItemAction(item.id) : item.onClick,
+  })) || [];
 
   if (!isOpen || !menuData) return null;
 
@@ -53,8 +69,12 @@ export default function MainMenuPanel({ isOpen, onClose, isMobile = false }: Mai
       {/* Menu Items */}
       <nav className="flex-1 overflow-y-auto p-4">
         <ul className="space-y-1">
-          {menuData.items.map((item: any) => (
-            <NavigationItem key={item.id} item={item} />
+          {processedItems.map((item: any) => (
+            <EnhancedNavigationItem 
+              key={item.id} 
+              item={item} 
+              onClose={isMobile ? onClose : undefined}
+            />
           ))}
         </ul>
       </nav>
@@ -69,4 +89,24 @@ export default function MainMenuPanel({ isOpen, onClose, isMobile = false }: Mai
       )}
     </div>
   );
+}
+
+// NavigationItem을 감싸서 클릭 시 모바일 메뉴 닫기 처리
+interface EnhancedNavigationItemProps {
+  item: any;
+  onClose?: () => void;
+  level?: number;
+}
+
+function EnhancedNavigationItem({ item, onClose, level = 0 }: EnhancedNavigationItemProps) {
+  // 링크 클릭 시 모바일에서 메뉴 닫기
+  const enhancedItem = {
+    ...item,
+    onClick: item.onClick || (item.type === 'link' && onClose ? () => {
+      // 링크의 경우 약간의 딜레이 후 메뉴 닫기 (라우팅 완료 후)
+      setTimeout(() => onClose(), 100);
+    } : undefined)
+  };
+
+  return <NavigationItem item={enhancedItem} level={level} />;
 }

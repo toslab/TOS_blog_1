@@ -4,6 +4,7 @@
 
 import React from 'react';
 import { Input } from '@/components/dashboard_UI/input';
+import { Badge } from '@/components/dashboard_UI/badge';
 import { Button } from '@/components/dashboard_UI/button';
 import { 
   Select,

@@ -159,8 +159,8 @@ export default function ProjectsView() {
   const searchParams = useSearchParams();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [filters, setFilters] = useState({
-    status: searchParams.get('status') || 'all',
-    myProjects: searchParams.get('filter') === 'mine',
+    status: 'all',
+    myProjects: false,
     search: '',
   });
 
@@ -172,7 +172,18 @@ export default function ProjectsView() {
   } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 로컬 데이터 필터링 및 로딩 시뮬레이션
+  // URL 파라미터가 변경될 때마다 filters 업데이트
+  useEffect(() => {
+    const newFilters = {
+      status: searchParams.get('status') || 'all',
+      myProjects: searchParams.get('filter') === 'mine',
+      search: searchParams.get('search') || '',
+    };
+    
+    setFilters(newFilters);
+  }, [searchParams]);
+
+  // filters가 변경될 때마다 데이터 다시 로드
   useEffect(() => {
     setIsLoading(true);
     
@@ -184,9 +195,11 @@ export default function ProjectsView() {
         filteredProjects = filteredProjects.filter(p => p.status === filters.status);
       }
       
-      // 내 프로젝트 필터링 (예시: 짝수 ID만 내 프로젝트로 가정)
+      // 내 프로젝트 필터링 (myRole이 'owner'이거나 'approver'인 경우)
       if (filters.myProjects) {
-        filteredProjects = filteredProjects.filter(p => parseInt(p.id) % 2 === 0);
+        filteredProjects = filteredProjects.filter(p => 
+          p.myRole === 'owner' || p.myRole === 'approver'
+        );
       }
       
       // 검색 필터링
@@ -218,14 +231,16 @@ export default function ProjectsView() {
   };
 
   const handleFilterChange = (newFilters: typeof filters) => {
-    setFilters(newFilters);
-    
     // URL 업데이트
     const params = new URLSearchParams();
     if (newFilters.status !== 'all') params.set('status', newFilters.status);
     if (newFilters.myProjects) params.set('filter', 'mine');
+    if (newFilters.search) params.set('search', newFilters.search);
     
-    router.push(`/dashboard/projects?${params.toString()}`);
+    const queryString = params.toString();
+    const newUrl = queryString ? `/dashboard/projects?${queryString}` : '/dashboard/projects';
+    
+    router.push(newUrl);
   };
 
   const handleRefresh = () => {
@@ -249,6 +264,15 @@ export default function ProjectsView() {
         filters={filters}
         onChange={handleFilterChange}
       />
+
+      {/* 현재 적용된 필터 표시 (디버깅용) */}
+      {filters.myProjects && (
+        <div className="px-4 py-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg border">
+          <p className="text-sm text-purple-800 dark:text-purple-200">
+            🔍 현재 "내 프로젝트"만 표시하고 있습니다 ({projects.length}개)
+          </p>
+        </div>
+      )}
 
       {/* View Tabs */}
       <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>

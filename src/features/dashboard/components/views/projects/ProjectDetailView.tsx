@@ -7,7 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/api/client';
 import { Project, Task } from '@/features/dashboard/types';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/dashboard_UI/tabs';
 import ProjectDetailHeader from './detail/ProjectDetailHeader';
 import ProjectOverview from './detail/ProjectOverview';
 import ProjectTasks from './detail/ProjectTasks';
