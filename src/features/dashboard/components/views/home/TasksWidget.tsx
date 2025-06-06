@@ -2,66 +2,88 @@
 
 'use client';
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/dashboard_UI/card';
+import { Checkbox } from '@/components/dashboard_UI/checkbox';
+import { Badge } from '@/components/dashboard_UI/badge';
+import { Button } from '@/components/dashboard_UI/button';
 import { Plus, Calendar, AlertCircle } from 'lucide-react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api/client';
+// import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'; // 주석 처리
+// import { apiClient } from '@/lib/api/client'; // 주석 처리
 import { Task } from '@/features/dashboard/types';
-import { cn } from '@/lib/utils';
+// import { cn } from '@/lib/utils'; // 주석 처리
 import { formatDate } from '@/lib/utils';
 
 export default function TasksWidget() {
-  const queryClient = useQueryClient();
+  const [tasks, setTasks] = useState<Partial<Task>[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
 
-  const { data: tasks, isLoading } = useQuery({
-    queryKey: ['my-tasks'],
-    queryFn: async () => {
-      // TODO: API 호출 - 내가 담당한 태스크
-      return [
+  // 로컬 데이터로 시뮬레이션
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const mockTasks: Partial<Task>[] = [
         {
           id: '1',
           title: '제품 기획서 검토',
-          project: 'K-Tea 프로젝트',
+          project: 'E-커머스 플랫폼 개발',
           priority: 'high',
-          dueDate: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(),
+          dueDate: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(), // 내일
           isOverdue: false,
           status: 'todo',
         },
         {
           id: '2',
-          title: '마케팅 전략 수립',
-          project: 'K-Tea 프로젝트',
+          title: 'UI/UX 디자인 피드백',
+          project: '모바일 앱 리뉴얼',
           priority: 'medium',
-          dueDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 3).toISOString(),
+          dueDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 3).toISOString(), // 3일 후
           isOverdue: false,
           status: 'in_progress',
         },
         {
           id: '3',
-          title: '재고 현황 보고서',
+          title: '재고 현황 보고서 작성',
           project: '월간 보고',
           priority: 'urgent',
-          dueDate: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
+          dueDate: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 어제 (기한 초과)
           isOverdue: true,
           status: 'todo',
         },
-      ] as Partial<Task>[];
-    },
-  });
+        {
+          id: '4',
+          title: '고객 피드백 분석',
+          project: '데이터 분석 시스템',
+          priority: 'low',
+          dueDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7).toISOString(), // 일주일 후
+          isOverdue: false,
+          status: 'todo',
+        },
+      ];
+      
+      setTasks(mockTasks.slice(0, 3)); // 최근 3개만 표시
+      setIsLoading(false);
+    }, 700); // 0.7초 후 로딩 완료
 
-  const updateTaskMutation = useMutation({
-    mutationFn: async ({ taskId, status }: { taskId: string; status: string }) => {
-      // TODO: API 호출
-      return apiClient.patch(`/tasks/${taskId}/`, { status });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
-    },
-  });
+    return () => clearTimeout(timer);
+  }, []);
+
+  // 태스크 상태 업데이트 함수
+  const updateTaskStatus = async (taskId: string, newStatus: string) => {
+    setIsUpdating(true);
+    
+    // 로컬 상태 업데이트 시뮬레이션
+    setTimeout(() => {
+      setTasks(prevTasks => 
+        prevTasks.map(task => 
+          task.id === taskId 
+            ? { ...task, status: newStatus as any }
+            : task
+        )
+      );
+      setIsUpdating(false);
+    }, 300); // 0.3초 딜레이
+  };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -122,24 +144,24 @@ export default function TasksWidget() {
                 <Checkbox
                   checked={task.status === 'done'}
                   onCheckedChange={(checked) => {
-                    updateTaskMutation.mutate({
-                      taskId: task.id!,
-                      status: checked ? 'done' : 'todo',
-                    });
+                    updateTaskStatus(
+                      task.id!,
+                      checked ? 'done' : 'todo'
+                    );
                   }}
                   className="mt-0.5"
+                  disabled={isUpdating}
                 />
                 <div className="flex-1 space-y-1">
                   <div className="flex items-start justify-between gap-2">
-                    <p className={cn(
-                      "text-sm font-medium",
-                      task.status === 'done' && "line-through text-gray-500"
-                    )}>
+                    <p className={`text-sm font-medium ${
+                      task.status === 'done' ? "line-through text-gray-500" : ""
+                    }`}>
                       {task.title}
                     </p>
                     <Badge 
                       variant="secondary" 
-                      className={cn("text-xs", getPriorityColor(task.priority!))}
+                      className={`text-xs ${getPriorityColor(task.priority!)}`}
                     >
                       {getPriorityLabel(task.priority!)}
                     </Badge>

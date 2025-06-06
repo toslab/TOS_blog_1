@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { ChevronRight, LucideIcon } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/dashboard_UI/badge';
 
 export interface NavigationItemType {
   id: string;

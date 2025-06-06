@@ -15,8 +15,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+} from '@/components/dashboard_UI/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/dashboard_UI/avatar';
 import { useAuth } from '@/features/dashboard/contexts/AuthContext';
 
 export default function UserMenu() {

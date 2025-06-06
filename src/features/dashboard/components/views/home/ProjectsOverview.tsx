@@ -2,25 +2,90 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/dashboard_UI/card';
+import { Button } from '@/components/dashboard_UI/button';
+import { Progress } from '@/components/dashboard_UI/progress';
+import { Badge } from '@/components/dashboard_UI/badge';
 import { ArrowRight, Clock, Users } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api/client';
+// import { useQuery } from '@tanstack/react-query'; // 주석 처리
+// import { apiClient } from '@/lib/api/client'; // 주석 처리
 import { Project } from '@/features/dashboard/types';
 
 export default function ProjectsOverview() {
-  const { data: projects, isLoading } = useQuery({
-    queryKey: ['projects', 'recent'],
-    queryFn: async () => {
-      const response = await apiClient.get<Project[]>('/projects/?limit=4');
-      return response;
-    },
-  });
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // 로컬 데이터로 시뮬레이션
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      // 샘플 프로젝트 데이터
+      const mockProjects: Project[] = [
+        {
+          id: '1',
+          name: 'E-커머스 플랫폼 개발',
+          code: 'ECOM-2024-001',
+          status: 'active',
+          progress: 75,
+          memberCount: 5,
+          daysRemaining: 15,
+          description: '새로운 온라인 쇼핑몰 플랫폼 개발',
+          startDate: '2024-01-01',
+          endDate: '2024-03-31',
+          createdAt: '2024-01-01T00:00:00Z',
+          updatedAt: '2024-01-15T00:00:00Z'
+        },
+        {
+          id: '2',
+          name: '모바일 앱 리뉴얼',
+          code: 'APP-2024-002',
+          status: 'planning',
+          progress: 25,
+          memberCount: 3,
+          daysRemaining: 45,
+          description: '기존 모바일 앱의 UI/UX 개선',
+          startDate: '2024-02-01',
+          endDate: '2024-05-31',
+          createdAt: '2024-01-15T00:00:00Z',
+          updatedAt: '2024-01-20T00:00:00Z'
+        },
+        {
+          id: '3',
+          name: '데이터 분석 시스템',
+          code: 'DATA-2024-003',
+          status: 'active',
+          progress: 60,
+          memberCount: 4,
+          daysRemaining: 30,
+          description: '고객 데이터 분석을 위한 시스템 구축',
+          startDate: '2024-01-10',
+          endDate: '2024-04-10',
+          createdAt: '2024-01-10T00:00:00Z',
+          updatedAt: '2024-01-25T00:00:00Z'
+        },
+        {
+          id: '4',
+          name: 'API 서버 최적화',
+          code: 'API-2024-004',
+          status: 'on_hold',
+          progress: 40,
+          memberCount: 2,
+          daysRemaining: null,
+          description: '기존 API 서버의 성능 최적화',
+          startDate: '2024-01-20',
+          endDate: '2024-03-20',
+          createdAt: '2024-01-20T00:00:00Z',
+          updatedAt: '2024-02-01T00:00:00Z'
+        }
+      ];
+      
+      setProjects(mockProjects.slice(0, 3)); // 최근 3개만 표시
+      setIsLoading(false);
+    }, 800); // 0.8초 후 로딩 완료
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const getStatusColor = (status: Project['status']) => {
     switch (status) {

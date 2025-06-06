@@ -2,25 +2,28 @@
 
 'use client';
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/dashboard_UI/card';
+import { Tabs, TabsList, TabsTrigger } from '@/components/dashboard_UI/tabs';
 import { 
   LineChart, Line, AreaChart, Area, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
 } from 'recharts';
-import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api/client';
+// import { useQuery } from '@tanstack/react-query'; // 주석 처리
+// import { apiClient } from '@/lib/api/client'; // 주석 처리
 
 type ChartPeriod = 'week' | 'month' | 'year';
 
 export default function RevenueChart() {
   const [period, setPeriod] = React.useState<ChartPeriod>('month');
+  const [chartData, setChartData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const { data: chartData, isLoading } = useQuery({
-    queryKey: ['revenue-chart', period],
-    queryFn: async () => {
-      // TODO: API 호출
+  // 로컬 데이터로 시뮬레이션
+  useEffect(() => {
+    setIsLoading(true);
+    
+    const timer = setTimeout(() => {
       const mockData = {
         week: [
           { name: '월', revenue: 4200000, orders: 120 },
@@ -46,9 +49,13 @@ export default function RevenueChart() {
           { name: '6월', revenue: 125000000, orders: 3200 },
         ],
       };
-      return mockData[period];
-    },
-  });
+      
+      setChartData(mockData[period]);
+      setIsLoading(false);
+    }, 500); // 0.5초 후 로딩 완료
+
+    return () => clearTimeout(timer);
+  }, [period]); // period가 변경될 때마다 데이터 다시 로드
 
   const formatYAxis = (value: number) => {
     if (value >= 1000000) {

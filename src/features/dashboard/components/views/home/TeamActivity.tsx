@@ -3,9 +3,9 @@
 'use client';
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/dashboard_UI/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/dashboard_UI/avatar';
+import { Badge } from '@/components/dashboard_UI/badge';
 import { useWebSocket } from '@/features/dashboard/hooks/useWebSocket';
 import { cn } from '@/lib/utils';
 

@@ -13,13 +13,13 @@ import {
   Bell, Zap 
 } from 'lucide-react';
 import { useAuth } from '@/features/dashboard/contexts/AuthContext';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/dashboard_UI/badge';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@/components/ui/tooltip';
+} from '@/components/dashboard_UI/tooltip';
 
 interface IconBarProps {
   collapsed: boolean;

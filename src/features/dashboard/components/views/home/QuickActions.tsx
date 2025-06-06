@@ -3,7 +3,7 @@
 'use client';
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/dashboard_UI/button';
 import { 
   Plus, FileText, Calendar, ShoppingBag, 
   Users, Package, Brain 
@@ -15,7 +15,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+} from '@/components/dashboard_UI/dialog';
 
 interface QuickAction {
   id: string;
@@ -67,7 +67,7 @@ export default function QuickActions() {
           <Button
             key={action.id}
             onClick={action.onClick}
-            className={cn("gap-2", action.color)}
+            className={`gap-2 ${action.color}`}
             size="sm"
           >
             {action.icon}

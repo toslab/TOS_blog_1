@@ -3,9 +3,9 @@
 'use client';
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/dashboard_UI/button';
 import { Plus, Download, Upload } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/dashboard_UI/badge';
 
 interface ProjectsHeaderProps {
   totalCount: number;

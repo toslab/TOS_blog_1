@@ -6,7 +6,7 @@ import React from 'react';
 import SearchBar from './SearchBar';
 import UserMenu from './UserMenu';
 import NotificationButton from './NotificationButton';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/dashboard_UI/button';
 import { Bell, Plus } from 'lucide-react';
 import { useWebSocket } from '@/features/dashboard/hooks/useWebSocket';
 

@@ -6,11 +6,11 @@ import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Project } from '@/features/dashboard/types';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Card } from '@/components/dashboard_UI/card';
+import { Button } from '@/components/dashboard_UI/button';
+import { Badge } from '@/components/dashboard_UI/badge';
+import { Progress } from '@/components/dashboard_UI/progress';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/dashboard_UI/avatar';
 import { 
   MoreVertical, Users, Calendar, Clock, 
   ChevronRight, Edit, Archive, Trash2 
@@ -21,7 +21,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@/components/dashboard_UI/dropdown-menu';
 import { formatDate } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 
@@ -158,9 +158,9 @@ export default function ProjectsList({ projects, onRefresh }: ProjectsListProps)
                        project.myRole === 'member' ? '멤버' : '뷰어'}
                     </p>
                     <Avatar className="w-8 h-8">
-                      <AvatarImage src={project.owner.profileImage} />
+                      <AvatarImage src={project.owner?.profileImage} />
                       <AvatarFallback>
-                        {project.owner.fullName?.slice(0, 2)}
+                        {project.owner?.fullName?.slice(0, 2) || project.name.slice(0, 2)}
                       </AvatarFallback>
                     </Avatar>
                   </div>

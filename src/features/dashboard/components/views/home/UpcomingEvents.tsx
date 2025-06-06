@@ -2,14 +2,14 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/dashboard_UI/card';
+import { Button } from '@/components/dashboard_UI/button';
 import { Calendar, Clock, MapPin, Users, Video } from 'lucide-react';
-import { formatDate } from '@/lib/utils';
-import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api/client';
+// import { formatDate } from '@/lib/utils'; // 제거
+// import { useQuery } from '@tanstack/react-query'; // 주석 처리
+// import { apiClient } from '@/lib/api/client'; // 주석 처리
 
 interface Event {
   id: string;
@@ -23,17 +23,28 @@ interface Event {
   color: string;
 }
 
+// 로컬 formatDate 함수 정의
+const formatDate = (date: string | Date) => {
+  return new Intl.DateTimeFormat("ko-KR", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date(date))
+};
+
 export default function UpcomingEvents() {
-  const { data: events, isLoading } = useQuery({
-    queryKey: ['upcoming-events'],
-    queryFn: async () => {
-      // TODO: API 호출
-      return [
+  const [events, setEvents] = useState<Event[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // 로컬 데이터로 시뮬레이션
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const mockEvents: Event[] = [
         {
           id: '1',
-          title: 'K-Tea 프로젝트 킥오프',
+          title: 'E-커머스 플랫폼 프로젝트 킥오프',
           type: 'meeting',
-          startTime: new Date(Date.now() + 1000 * 60 * 60 * 2).toISOString(),
+          startTime: new Date(Date.now() + 1000 * 60 * 60 * 2).toISOString(), // 2시간 후
           duration: 60,
           isOnline: true,
           attendees: 8,
@@ -43,7 +54,7 @@ export default function UpcomingEvents() {
           id: '2',
           title: '마케팅 전략 워크샵',
           type: 'workshop',
-          startTime: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(),
+          startTime: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(), // 내일
           duration: 120,
           location: '회의실 A',
           isOnline: false,
@@ -54,15 +65,41 @@ export default function UpcomingEvents() {
           id: '3',
           title: 'AI 활용 세미나',
           type: 'webinar',
-          startTime: new Date(Date.now() + 1000 * 60 * 60 * 48).toISOString(),
+          startTime: new Date(Date.now() + 1000 * 60 * 60 * 48).toISOString(), // 이틀 후
           duration: 90,
           isOnline: true,
           attendees: 25,
           color: 'bg-green-500',
         },
-      ] as Event[];
-    },
-  });
+        {
+          id: '4',
+          title: '팀 빌딩 미팅',
+          type: 'meeting',
+          startTime: new Date(Date.now() + 1000 * 60 * 60 * 72).toISOString(), // 3일 후
+          duration: 45,
+          location: '회의실 B',
+          isOnline: false,
+          attendees: 6,
+          color: 'bg-orange-500',
+        },
+        {
+          id: '5',
+          title: '데이터 분석 리뷰',
+          type: 'meeting',
+          startTime: new Date(Date.now() + 1000 * 60 * 60 * 96).toISOString(), // 4일 후
+          duration: 75,
+          isOnline: true,
+          attendees: 10,
+          color: 'bg-red-500',
+        },
+      ];
+      
+      setEvents(mockEvents.slice(0, 4)); // 최근 4개만 표시
+      setIsLoading(false);
+    }, 500); // 0.5초 후 로딩 완료
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
@@ -115,10 +152,7 @@ export default function UpcomingEvents() {
                 className="block p-3 rounded-lg border hover:shadow-sm transition-shadow"
               >
                 <div className="flex gap-3">
-                  <div className={cn(
-                    "w-1 rounded-full flex-shrink-0",
-                    event.color
-                  )} />
+                  <div className={`w-1 rounded-full flex-shrink-0 ${event.color}`} />
                   <div className="flex-1 space-y-1">
                     <p className="text-sm font-medium">
                       {event.title}
@@ -131,6 +165,9 @@ export default function UpcomingEvents() {
                       <span className="flex items-center gap-1">
                         <Clock className="w-3 h-3" />
                         {formatTime(event.startTime)}
+                      </span>
+                      <span className="text-gray-500">
+                        ({formatDuration(event.duration)})
                       </span>
                     </div>
                     <div className="flex items-center gap-3 text-xs text-gray-600 dark:text-gray-400">

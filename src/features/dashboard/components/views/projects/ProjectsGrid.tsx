@@ -5,19 +5,19 @@
 import React from 'react';
 import Link from 'next/link';
 import { Project } from '@/features/dashboard/types';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Card, CardContent, CardHeader } from '@/components/dashboard_UI/card';
+import { Badge } from '@/components/dashboard_UI/badge';
+import { Progress } from '@/components/dashboard_UI/progress';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/dashboard_UI/avatar';
 import { Users, Calendar, MoreVertical } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/dashboard_UI/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@/components/dashboard_UI/dropdown-menu';
 
 interface ProjectsGridProps {
   projects: Project[];

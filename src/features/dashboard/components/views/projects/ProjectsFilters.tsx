@@ -3,15 +3,15 @@
 'use client';
 
 import React from 'react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import { Input } from '@/components/dashboard_UI/input';
+import { Button } from '@/components/dashboard_UI/button';
 import { 
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@/components/dashboard_UI/select';
 import { Search, Filter, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 

@@ -2,15 +2,15 @@
 
 'use client';
 
-import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent } from '@/components/dashboard_UI/card';
 import { 
   TrendingUp, TrendingDown, Users, ShoppingBag, 
   FileText, Package, DollarSign, Activity 
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api/client';
+// import { cn } from '@/lib/utils'; // cn 함수 주석 처리
+// import { useQuery } from '@tanstack/react-query'; // useQuery 주석 처리
+// import { apiClient } from '@/lib/api/client'; // apiClient 주석 처리
 
 interface StatCard {
   id: string;
@@ -23,18 +23,23 @@ interface StatCard {
 }
 
 export default function StatsCards() {
-  const { data: stats, isLoading } = useQuery({
-    queryKey: ['dashboard-stats'],
-    queryFn: async () => {
-      // TODO: API 호출
-      return {
+  const [stats, setStats] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // 로컬 데이터로 시뮬레이션
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setStats({
         revenue: { value: '₩124.5M', change: 12.5 },
         orders: { value: 326, change: 8.2 },
         customers: { value: 1234, change: -2.1 },
         inventory: { value: '89%', change: 5.3 },
-      };
-    },
-  });
+      });
+      setIsLoading(false);
+    }, 1000); // 1초 후 로딩 완료
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const cards: StatCard[] = [
     {
@@ -97,7 +102,7 @@ export default function StatsCards() {
         <Card key={card.id} className="hover:shadow-lg transition-shadow">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <div className={cn("p-2 rounded-lg", card.color)}>
+              <div className={`p-2 rounded-lg ${card.color}`}>
                 {card.icon}
               </div>
               <div className="flex items-center gap-1 text-sm">
@@ -106,10 +111,9 @@ export default function StatsCards() {
                 ) : (
                   <TrendingDown className="w-4 h-4 text-red-600" />
                 )}
-                <span className={cn(
-                  "font-medium",
+                <span className={`font-medium ${
                   card.changeType === 'increase' ? 'text-green-600' : 'text-red-600'
-                )}>
+                }`}>
                   {Math.abs(card.change)}%
                 </span>
               </div>
