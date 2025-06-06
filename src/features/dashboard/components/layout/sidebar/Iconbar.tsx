@@ -55,7 +55,7 @@ export default function IconBar({ collapsed, onToggle, onMenuToggle }: IconBarPr
   };
 
   return (
-    <TooltipProvider>
+    <TooltipProvider delayDuration={300}>
       <div 
         className={cn(
           "h-full bg-gray-900 text-white transition-all duration-300 flex flex-col",
@@ -64,13 +64,13 @@ export default function IconBar({ collapsed, onToggle, onMenuToggle }: IconBarPr
       >
         {/* Logo & Menu Toggle */}
         <div className="h-16 flex items-center justify-center border-b border-gray-800">
-          <button
-            onClick={onMenuToggle}
-            className="p-2 rounded-lg hover:bg-gray-800 transition-colors"
-          >
-            <Menu className="w-6 h-6" />
-          </button>
-        </div>
+              <button
+                onClick={onMenuToggle}
+                className="p-2 rounded-lg hover:bg-gray-800 transition-colors"
+              >
+                <Menu className="w-6 h-6" />
+              </button>
+         </div>
 
         {/* Main Navigation */}
         <nav className="flex-1 py-4">
@@ -83,29 +83,38 @@ export default function IconBar({ collapsed, onToggle, onMenuToggle }: IconBarPr
                 <li key={item.id}>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Link
-                        href={item.href}
-                        className={cn(
-                          "relative flex items-center justify-center p-3 rounded-lg transition-all",
-                          "hover:bg-gray-800",
-                          active && "bg-purple-600 hover:bg-purple-700"
-                        )}
-                      >
-                        <Icon className={cn(
-                          "w-6 h-6",
-                          active ? "text-white" : "text-gray-400"
-                        )} />
-                        {item.badge && (
-                          <Badge 
-                            className="absolute -top-1 -right-1 h-5 min-w-[20px] px-1 text-xs"
-                            variant={active ? "secondary" : "destructive"}
-                          >
-                            {item.badge}
-                          </Badge>
-                        )}
-                      </Link>
+                    <Link
+  href={item.href}
+  className={cn(
+    "relative flex items-center justify-center p-3 rounded-lg transition-all",
+    "hover:bg-gray-800",
+    active && "bg-purple-600 hover:bg-purple-700"
+  )}
+>
+  <div className="relative">
+    <Icon className={cn(
+      "w-6 h-6",
+      active ? "text-white" : "text-gray-400"
+    )} />
+    {item.badge && (
+      <div 
+        className="absolute w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center text-[11px] font-semibold"
+        style={{ 
+          top: '-5px', 
+          right: '-5px' 
+        }}
+      >
+        {item.badge}
+      </div>
+    )}
+  </div>
+</Link>
                     </TooltipTrigger>
-                    <TooltipContent side="right">
+                    <TooltipContent 
+                      side="right" 
+                      className="bg-gray-800 text-white border-gray-600 shadow-xl px-3 py-2 font-medium"
+                      sideOffset={9}
+                    >
                       <p>{item.name}</p>
                     </TooltipContent>
                   </Tooltip>
@@ -140,7 +149,11 @@ export default function IconBar({ collapsed, onToggle, onMenuToggle }: IconBarPr
                         )} />
                       </Link>
                     </TooltipTrigger>
-                    <TooltipContent side="right">
+                    <TooltipContent 
+                      side="right" 
+                      className="bg-gray-800 text-white border-gray-600 shadow-xl px-3 py-2 font-medium"
+                      sideOffset={9}
+                    >
                       <p>{item.name}</p>
                     </TooltipContent>
                   </Tooltip>
@@ -159,7 +172,11 @@ export default function IconBar({ collapsed, onToggle, onMenuToggle }: IconBarPr
                     <LogOut className="w-6 h-6 text-gray-400" />
                   </button>
                 </TooltipTrigger>
-                <TooltipContent side="right">
+                <TooltipContent 
+                  side="right" 
+                  className="bg-gray-800 text-white border-gray-600 shadow-xl px-3 py-2 font-medium"
+                  sideOffset={9}
+                >
                   <p>로그아웃</p>
                 </TooltipContent>
               </Tooltip>
@@ -169,16 +186,27 @@ export default function IconBar({ collapsed, onToggle, onMenuToggle }: IconBarPr
 
         {/* Collapse Toggle */}
         <div className="p-2">
-          <button
-            onClick={onToggle}
-            className="w-full flex items-center justify-center p-2 rounded-lg hover:bg-gray-800 transition-colors"
-          >
-            {collapsed ? (
-              <ChevronRight className="w-5 h-5 text-gray-400" />
-            ) : (
-              <ChevronLeft className="w-5 h-5 text-gray-400" />
-            )}
-          </button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={onToggle}
+                className="w-full flex items-center justify-center p-2 rounded-lg hover:bg-gray-800 transition-colors"
+              >
+                {collapsed ? (
+                  <ChevronRight className="w-5 h-5 text-gray-400" />
+                ) : (
+                  <ChevronLeft className="w-5 h-5 text-gray-400" />
+                )}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent 
+              side="right" 
+              className="bg-gray-800 text-white border-gray-600 shadow-xl px-3 py-2 font-medium"
+              sideOffset={9}
+            >
+              <p>{collapsed ? '사이드바 확장' : '사이드바 축소'}</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
       </div>
     </TooltipProvider>

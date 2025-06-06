@@ -4,7 +4,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { ChevronRight, LucideIcon } from 'lucide-react';
 import { Badge } from '@/components/dashboard_UI/badge';
@@ -28,6 +28,7 @@ interface NavigationItemProps {
 
 export default function NavigationItem({ item, level = 0 }: NavigationItemProps) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [expanded, setExpanded] = React.useState(false);
 
   if (item.type === 'separator') {
@@ -46,7 +47,28 @@ export default function NavigationItem({ item, level = 0 }: NavigationItemProps)
     );
   }
 
-  const isActive = item.href ? pathname === item.href : false;
+  const isActive = React.useMemo(() => {
+    if (!item.href) return false;
+
+    const [itemPath, itemQuery] = item.href.split('?');
+    const currentQuery = searchParams.toString();
+
+    if (pathname === itemPath) {
+      if (itemQuery && currentQuery) {
+        return itemQuery === currentQuery;
+      }
+      if (!itemQuery && !currentQuery) {
+        return true;
+      }
+      if (!itemQuery && currentQuery) {
+        return false;
+      }
+    }
+
+    const currentFullUrl = currentQuery ? `${pathname}?${currentQuery}` : pathname;
+    return currentFullUrl === item.href;
+  }, [pathname, searchParams, item.href]);
+
   const hasChildren = item.children && item.children.length > 0;
   const Icon = item.icon;
 
@@ -72,7 +94,7 @@ export default function NavigationItem({ item, level = 0 }: NavigationItemProps)
     "flex items-center gap-3 px-3 py-2 rounded-lg transition-all",
     "text-gray-700 dark:text-gray-300",
     "hover:bg-gray-100 dark:hover:bg-gray-700",
-    isActive && "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400",
+    isActive && "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 font-medium",
     level > 0 && "ml-4"
   );
 
