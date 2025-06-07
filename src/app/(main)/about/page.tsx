@@ -51,7 +51,7 @@ function AnimatedRole({ children, delay = 0 }: { children: React.ReactNode; dela
 
 // 서비스 아코디언 컴포넌트
 function ServiceAccordion() {
-  const [openIndices, setOpenIndices] = useState<number[]>([0])
+  const [openIndices, setOpenIndices] = useState<number[]>([])
   const [closingIndex, setClosingIndex] = useState<number | null>(null)
   
   const toggleService = (index: number) => {

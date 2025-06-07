@@ -12,6 +12,9 @@ import ContentArea from './ContentArea';
 import { useDashboardStore } from '../../stores/dashboardStore';
 import { useAuth } from '../../contexts/AuthContext';
 
+// Dashboard 전용 CSS 스타일 import
+import '@/styles/dashboard/dashboard.css';
+
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }

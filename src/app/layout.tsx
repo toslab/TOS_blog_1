@@ -1,6 +1,7 @@
 import { type Metadata } from 'next'
 
 import { Providers } from '@/app/providers'
+import { StagewiseToolbar } from '@stagewise/toolbar-next'
 
 import '@/styles/main/main.css' 
 
@@ -23,6 +24,10 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  const stagewiseConfig = {
+    plugins: []
+  };
+
   return (
     <html lang="ko" className="h-full antialiased" suppressHydrationWarning>
       <body className="h-full">
@@ -30,6 +35,9 @@ export default function RootLayout({
           {/* dashboard 외부 경로에만 Layout 사용 (children에게 판단 위임) */}
           {children}
         </Providers>
+        {process.env.NODE_ENV === 'development' && (
+          <StagewiseToolbar config={stagewiseConfig} />
+        )}
       </body>
     </html>
   )
