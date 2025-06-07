@@ -266,12 +266,15 @@ export default function NotificationButton() {
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="w-5 h-5" />
           {unreadCount > 0 && (
-            <Badge 
-              className="absolute -top-1 -right-1 h-5 min-w-[20px] px-1 text-xs"
-              variant="destructive"
+            <div 
+              className="absolute h-4 min-w-[18px] px-1 text-[12px] bg-red-500 text-white rounded-full flex items-center justify-center font-medium"
+              style={{ 
+                top: '2px', 
+                right: '2px' 
+              }}
             >
               {unreadCount > 99 ? '99+' : unreadCount}
-            </Badge>
+            </div>
           )}
         </Button>
       </DropdownMenuTrigger>

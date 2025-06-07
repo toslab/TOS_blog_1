@@ -195,7 +195,7 @@ export default function DocumentEditor({ mode, documentId }: DocumentEditorProps
   return (
     <div className="h-full flex flex-col bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b px-6 py-4">
+      <div className="bg-white dark:bg-gray-800 border-b px-6 py-4 rounded-t-lg">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4 flex-1">
             <Button
